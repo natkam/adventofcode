@@ -28,7 +28,7 @@ def solve_captcha(input):
 def test_captcha(test_inputs_and_results):
     for pair in test_inputs_and_results:
         if solve_captcha(pair[0]) != pair[1]:
-            print("Wrong result for " + str(pair[0]))
+            print('Wrong result for '' + str(pair[0]))
 
 test_inputs_and_results = [[1122, 3], [1111, 4], [1234, 0], [91212129, 9]]
 test_captcha(test_inputs_and_results)
