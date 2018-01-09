@@ -45,7 +45,7 @@ def find_dividing_pair(int_list):
 
 def test_calculate_checksum(test_spreadsheet, expected_checksum):
     actual_checksum = calculate_checksum(test_spreadsheet)
-    assert actual_checksum == expected_checksum, "actual_checksum = " + str(actual_checksum)
+    assert actual_checksum == expected_checksum, 'actual_checksum = ' + str(actual_checksum)
 
 test_spreadsheet1 = '5 9 2 8\n' + '9 4 7 3\n' + '3 8 6 5'
 test_calculate_checksum(test_spreadsheet1, 9)
