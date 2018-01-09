@@ -1,7 +1,7 @@
 import pytest
 from aoc_03_spiral1 import calculate_distance
 
-@pytest.fixture(params=[[1, 0], [12, 3], [23, 2], [1024, 31], [325489, 552]])
+@pytest.fixture(params=[[1, 0], [9, 2], [12, 3], [23, 2], [1024, 31], [325489, 552]])
 def before(request):
     return request.param
 

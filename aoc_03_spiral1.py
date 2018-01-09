@@ -30,46 +30,36 @@ import math
 
 def find_max_odd_root(number):
     max_root = int(math.sqrt(number))
-    # print(max_root)
     max_odd_root = max_root if (max_root % 2) else max_root - 1  # python ternary operator o_O
     return max_odd_root
 
+def distance(x, y):
+    return abs(x) + abs(y)
+
 def calculate_distance(number):
     max_odd_root = find_max_odd_root(number)
-    min_distance = int(max_odd_root/2)
-    x, y = min_distance, -min_distance
-    print('the odd square x, y: %s' % x, y)
-    # x, y = find_odd_square_coords(number)
-    tail = number - max_odd_root**2
-    # print('tail: %s' % tail)
-    if tail == 0:
-        print('tail == 0')
-        return abs(x) + abs(y)
-    elif tail <= 2 * min_distance + 1 + 1: # 2 * (min_distance + 1)
-        x += 1
-        y += tail - 1
-        print('0th side of the square, x, y = %s' % x, y)
-        return abs(x) + abs(y)
-    elif tail <= 4 * (min_distance + 1):
-        y = min_distance + 1
-        x = min_distance + 1 - tail % (2 * (min_distance + 1))
-        print('1st side of the square, x, y = %s' % x, y)
-        return abs(x) + abs(y)
-    elif tail <= 6 * (min_distance + 1):
-        x = -(min_distance + 1)
-        y = min_distance + 1 - tail % (2 * (min_distance + 1))
-        print('2nd side of the square, x, y = %s' % x, y)
-        return abs(x) + abs(y)
-    elif tail <= 8 * (min_distance + 1):
-        y = -(min_distance + 1)
-        x = -(min_distance + 1) + tail % (2 * (min_distance + 1))
-        print('3rd side of the square, x, y = %s' % x, y)
-        return abs(x) + abs(y)
-    # (side, remainder) = divmod(tail, max_odd_root+1)
-    # print(side, remainder)
-    # return 123
+    sq_coordinate = int(max_odd_root/2)
+    min_distance = sq_coordinate + 1
+    tail_len = number - max_odd_root**2
+    tail_rem = tail_len % (2 * min_distance)
+    if tail_len == 0:
+        x = sq_coordinate
+        y = -(sq_coordinate)
+    elif tail_len <= 2 * min_distance:
+        x = min_distance
+        y = -(min_distance) + tail_rem  # tail_rem == tail_len
+    elif tail_len <= 4 * min_distance:
+        x = min_distance - tail_rem
+        y = min_distance
+    elif tail_len <= 6 * min_distance:
+        x = -(min_distance)
+        y = min_distance - tail_rem
+    elif tail_len <= 8 * min_distance:
+        x = -(min_distance) + tail_rem
+        y = -(min_distance)
+    else:
+        raise ValueError('At least one of these has incorrect value: (tail_len, min_distance) == (%s, %s)' % (tail_len, min_distance))
+    return distance(x, y)
 
 input_number = 325489
-# input_number = 26
-# print(find_max_odd_root(input_number))
 print('calculated distance: ', calculate_distance(input_number))
