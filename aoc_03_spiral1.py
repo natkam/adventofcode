@@ -26,39 +26,42 @@ input: 325489
 correct answer: 552
 
 """
-import math
+from math import ceil, sqrt
 
 def find_max_odd_root(number):
-    max_root = int(math.sqrt(number))
+    max_root = int(sqrt(number))
     max_odd_root = max_root if (max_root % 2) else max_root - 1  # python ternary operator o_O
     return max_odd_root
 
 def distance(x, y):
     return abs(x) + abs(y)
 
+def set_final_coords(min_distance, tail_len):
+    side = ceil(tail_len/2/min_distance)
+    tail_rem = tail_len % (2 * min_distance)
+    return {
+        1: (min_distance, -(min_distance) + tail_rem),
+        2: (min_distance - tail_rem, min_distance),
+        3: (-(min_distance), min_distance - tail_rem),
+        4: (-(min_distance) + tail_rem, -(min_distance)),
+    }.get(side, None)
+
 def calculate_distance(number):
     max_odd_root = find_max_odd_root(number)
-    sq_coordinate = int(max_odd_root/2)
+    sq_coordinate = max_odd_root//2
     min_distance = sq_coordinate + 1
     tail_len = number - max_odd_root**2
-    tail_rem = tail_len % (2 * min_distance)
     if tail_len == 0:
         x = sq_coordinate
         y = -(sq_coordinate)
-    elif tail_len <= 2 * min_distance:
-        x = min_distance
-        y = -(min_distance) + tail_rem  # tail_rem == tail_len
-    elif tail_len <= 4 * min_distance:
-        x = min_distance - tail_rem
-        y = min_distance
-    elif tail_len <= 6 * min_distance:
-        x = -(min_distance)
-        y = min_distance - tail_rem
-    elif tail_len <= 8 * min_distance:
-        x = -(min_distance) + tail_rem
-        y = -(min_distance)
     else:
-        raise ValueError('At least one of these has incorrect value: (tail_len, min_distance) == (%s, %s)' % (tail_len, min_distance))
+        try:
+            x, y = set_final_coords(min_distance, tail_len)
+        except TypeError:
+            print('Error! \nProbably one of these has an incorrect value:'
+            + '\n(tail_len, min_distance) == (%s, %s)' % (tail_len, min_distance))
+            raise
+        # is this an appropriate way to handle it?
     return distance(x, y)
 
 input_number = 325489
