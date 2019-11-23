@@ -5,3 +5,5 @@ http://adventofcode.com/
 They are self-contained and are just as appropriate for an expert who wants to stay sharp 
 as they are for a beginner who is just learning to code. Each puzzle calls upon different 
 skills and has two parts that build on a theme."
+
+Some solutions use `numpy`, but apart from that, all I used was Python (3.5 or higher).
