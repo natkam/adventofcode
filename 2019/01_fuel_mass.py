@@ -1,4 +1,4 @@
-with open("01_input") as f:
+with open("01_input", "r") as f:
     data = f.read()
 
 
