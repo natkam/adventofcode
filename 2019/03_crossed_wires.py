@@ -1,0 +1,56 @@
+
+def calculate_distance(point_1, point_2):
+    return sum((abs(coord_1 - coord_2) for coord_1, coord_2 in zip(point_1, point_2)))
+
+
+def solve_part_one(data):
+    first_wire, second_wire = [wire.split(",") for wire in data.splitlines()]
+    coords_1 = set()
+    coords_2 = set()
+
+    x_now, y_now = 0, 0
+    for path in first_wire:
+        direction = path[0]
+        steps_count = int(path[1:])
+        if direction == "R":
+            coords_1.update([(x_now + x, y_now) for x in range(1, steps_count)])
+            x_now += steps_count
+        elif direction == "L":
+            coords_1.update([(x_now - x, y_now) for x in range(1, steps_count)])
+            x_now -= steps_count
+        elif direction == "U":
+            coords_1.update([(x_now, y_now + y) for y in range(1, steps_count)])
+            y_now += steps_count
+        elif direction == "D":
+            coords_1.update([(x_now, y_now - y) for y in range(1, steps_count)])
+            y_now -= steps_count
+
+    x_now, y_now = 0, 0
+    for path in second_wire:
+        direction = path[0]
+        steps_count = int(path[1:])
+        if direction == "R":
+            coords_2.update([(x_now + x, y_now) for x in range(1, steps_count)])
+            x_now += steps_count
+        elif direction == "L":
+            coords_2.update([(x_now - x, y_now) for x in range(1, steps_count)])
+            x_now -= steps_count
+        elif direction == "U":
+            coords_2.update([(x_now, y_now + y) for y in range(1, steps_count)])
+            y_now += steps_count
+        elif direction == "D":
+            coords_2.update([(x_now, y_now - y) for y in range(1, steps_count)])
+            y_now -= steps_count
+
+    crossed_points = coords_1.intersection(coords_2)
+    cross_distances = [calculate_distance((0, 0), point) for point in crossed_points]
+
+    return min(cross_distances)
+
+
+
+if __name__ == '__main__':
+    with open("03_input", "r") as f:
+        data = f.read()
+        
+    print(solve_part_one(data))
