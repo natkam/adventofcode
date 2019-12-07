@@ -1,7 +1,12 @@
 def solve_part_one(opcodes):
     first_input = 1
+    advance_pointer = False
 
     for index in range(0, len(opcodes), 2):
+        if advance_pointer:
+            advance_pointer = False
+            continue
+
         code = int(str(opcodes[index])[-2:])
         modes = str(opcodes[index])[:-2]
 
@@ -15,30 +20,33 @@ def solve_part_one(opcodes):
 
         if code == 4:
             param = opcodes[index + 1]
-            mode = modes[-1]
-            if not mode or mode == "0":
+            if not modes or modes[-1] == "0":
                 print(f"[opcode 4] {opcodes[param]}")
-            elif mode == "1":
+            elif modes[-1] == "1":
                 print(f"[opcode 4] {param}")
+            else:
+                raise ValueError(f"Unknkown mode! {modes[-1]}")
             continue
 
-        # TODO: modes for instructions 1 & 2; and advance the loop by 4!
-        i_1, i_2, i_result = (
-            opcodes[index + 1],
-            opcodes[index + 2],
-            opcodes[index + 3],
-        )
+        params = []
+        for i in range(1, 3):
+            if not modes or modes[-1] == "0":
+                params.append(opcodes[opcodes[index + i]])
+            elif modes[-1] == "1":
+                params.append(opcodes[index + i])
+            else:
+                raise ValueError(f"Unknkown mode! {modes[-1]}")
+            modes = modes[:-1]
 
         if code == 1:
-            result = opcodes[i_1] + opcodes[i_2]
+            result = params[0] + params[1]
         elif code == 2:
-            result = opcodes[i_1] * opcodes[i_2]
+            result = params[0] * params[1]
         else:
             raise ValueError(f"Unknown opcode! {type(code)}, {index}, {opcodes[index]}")
 
-        opcodes[i_result] = result
-
-    return opcodes[0]
+        opcodes[opcodes[index + 3]] = result
+        advance_pointer = True
 
 
 def test_case_1():
@@ -46,11 +54,10 @@ def test_case_1():
     solve_part_one(opcodes)  # prints "1"
 
 
-
-
 if __name__ == "__main__":
-    # with open("02_input", "r") as f:
-    #     opcodes = [int(code) for code in f.read().split(",")]
-    #
-    # print(solve_part_one(opcodes))
-    test_case_1()
+    # test_case_1()
+
+    with open("05_input", "r") as f:
+        opcodes = [int(code) for code in f.read().split(",")]
+
+    solve_part_one(opcodes)
