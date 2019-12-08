@@ -7,10 +7,16 @@ class Computer:
     Solves the problem in day 7.
     """
 
-    def __init__(self, opcodes: typing.List[int], initial_input: int = 1):
+    def __init__(
+        self,
+        opcodes: typing.List[int],
+        initial_input: typing.Optional[int] = None,
+        next_input: typing.Optional[int] = None,
+    ):
         self.opcodes = opcodes
         self.advance_pointer = 0
-        self.next_input = initial_input
+        self.initial_input = initial_input  # the phase setting
+        self.next_input = next_input  # output from the previous amplifier
 
     def _get_params(self, index, params_number=3):
         modes = str(self.opcodes[index])[:-2]
@@ -68,7 +74,14 @@ class Computer:
         # params = self._get_params(index, params_number)  # not needed here
         result_index = self.opcodes[index + 1]
         # value_to_write = int(input("Provide a number: "))
-        value_to_write = self.next_input
+        if self.initial_input is not None:
+            value_to_write = self.initial_input
+            self.initial_input = None
+        elif self.next_input is not None:
+            value_to_write = self.next_input
+            self.next_input = None
+        else:
+            value_to_write = int(input("Provide a number: "))
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
 
