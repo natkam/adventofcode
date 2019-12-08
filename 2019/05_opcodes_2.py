@@ -1,7 +1,7 @@
 class PartOneSolution:
     def __init__(self, opcodes):
         self.opcodes = opcodes
-        self.advance_pointer = False
+        self.advance_pointer = 0
 
     def _get_params(self, index, params_number):
         modes = str(self.opcodes[index])[:-2]
@@ -17,33 +17,19 @@ class PartOneSolution:
 
         return params
 
-    def _process_opcode_3(self, index):
-        """ Take the input ("1") and write it to the specified position. """
-        result_index = self.opcodes[index + 1]
-        value_to_write = 1
-        self.opcodes[result_index] = value_to_write
-
-        return
-
-    def _process_opcode_4(self, index):
-        """ Take the value specified by the param, and output it to sdtout. """
-        params = self._get_params(index, 1)
-        print(f"[opcode 4] {params[0]}")
-
-        return
-
     def _process_opcode_1(self, index):
         """ Sum together two numbers and write the result to a specified position.
 
         The numbers to sum are specified by the first two params.
         The third param specifies the position to write the result.
         """
-        params = self._get_params(index, 2)
+        params_number = 3
+        params = self._get_params(index, params_number)
         result_index = self.opcodes[index + 3]
         value_to_write = params[0] + params[1]
 
         self.opcodes[result_index] = value_to_write
-        self.advance_pointer = True
+        self.advance_pointer = params_number
 
         return
 
@@ -53,12 +39,37 @@ class PartOneSolution:
         The numbers to multiply are specified by the first two params.
         The third param specifies the position to write the result.
         """
-        params = self._get_params(index, 2)
+        params_number = 3
+        params = self._get_params(index, params_number)
         result_index = self.opcodes[index + 3]
         value_to_write = params[0] * params[1]
 
         self.opcodes[result_index] = value_to_write
-        self.advance_pointer = True
+        self.advance_pointer = params_number
+
+        return
+
+    def _process_opcode_3(self, index):
+        """ Take the input and write it to the specified position.
+
+        For the 1st part of the task, the input should be "1".
+        For the 2nd part of the task, the input should be "5".
+        """
+        params_number = 1
+        # params = self._get_params(index, params_number)  # not needed here
+        result_index = self.opcodes[index + 1]
+        value_to_write = int(input("Provide a number: "))
+        self.opcodes[result_index] = value_to_write
+        self.advance_pointer = params_number
+
+        return
+
+    def _process_opcode_4(self, index):
+        """ Take the value specified by the param, and output it to sdtout. """
+        params_number = 1
+        params = self._get_params(index, params_number)
+        print(f"[opcode 4] {params[0]}")
+        self.advance_pointer = params_number
 
         return
 
@@ -81,9 +92,9 @@ class PartOneSolution:
             raise ValueError(f"Unknown opcode! {opcode} - {type(opcode)}")
 
     def solve(self):
-        for index in range(0, len(self.opcodes), 2):
-            if self.advance_pointer:
-                self.advance_pointer = False
+        for index in range(0, len(self.opcodes)):
+            if self.advance_pointer != 0:
+                self.advance_pointer -= 1
                 continue
 
             opcode = int(str(self.opcodes[index])[-2:])
