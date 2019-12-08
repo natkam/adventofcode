@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import typing
 
 
 class Computer:
     """ A slightly modified version of the solution to day 5, pt. 2.
 
-    Solves the problem in day 7.
+    Solves the problem in day 7, but works for day 5 too.
     """
 
     def __init__(
@@ -12,11 +14,13 @@ class Computer:
         opcodes: typing.List[int],
         initial_input: typing.Optional[int] = None,
         next_input: typing.Optional[int] = None,
+        previous: typing.Optional[Computer] = None,
     ):
         self.opcodes = opcodes
         self.advance_pointer = 0
         self.initial_input = initial_input  # the phase setting
         self.next_input = next_input  # output from the previous amplifier
+        self.previous = previous
 
     def _get_params(self, index, params_number=3):
         modes = str(self.opcodes[index])[:-2]
