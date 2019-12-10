@@ -1,3 +1,6 @@
+from __future__ import annotations  # Python 3.8
+import typing
+
 with open("06_test_input", "r") as f:
     test_data = f.read().splitlines()
 
@@ -5,62 +8,66 @@ with open("06_input", "r") as f:
     data = f.read().splitlines()
 
 
-known_parents = dict()
+class Node:
+    def __init__(
+        self,
+        name: str,
+        parent: typing.Optional[Node] = None,
+        # children: typing.Optional[typing.List[Node]] = None,
+    ):
+        self.name = name
+        self.parent = parent
+        # self.children = children or []
 
+    def __repr__(self):
+        return f"<Node {self.name}>"
 
-# def find_outermost_objects(orbits):
-# lhs = {obj[0] for obj in orbits}
-# rhs = {obj[1] for obj in orbits}
-# return rhs - lhs
+    def get_all_ancestors(self):
+        ancestors = []
+        par = self.parent
+        while True:
+            if par is None:
+                break
+            ancestors.append(par)
+            par = par.parent
 
+        return ancestors
 
-def find_parents(child, direct_parents):
-    global known_parents
-    direct_parent = direct_parents[child]
-    parents = known_parents.get(child, [])
-    parents.append(direct_parent)
-    known_parents[child] = parents
-    print(f"[{direct_parent}){child}] {known_parents[child]}")
-
-    if direct_parent != "COM":
-        parents.extend(known_parents[direct_parent])
-        known_parents[child] = parents
-        # find_parents(direct_parent, direct_parents)
-
-    return known_parents[child]
+    # def get_direct_children(self, nodes: typing.List[Node]):
+    #     children = [node for node in nodes if node.parent == self]
+    #     return children
 
 
 def solve_first_part(data):
-    direct_parents = dict(line.split(")")[::-1] for line in data)
-    orbit_count = 0
-    all_children = sorted(list(set(direct_parents)))
-    print(all_children[:100])
-    all_parents = set(direct_parents.values())
-    all_objects = all_children.copy()
-    all_objects.append("COM")
-    # print(
-    #     f"all_parents: {len(all_parents)}, all_children: {len(all_children)}, all_objects: {len(all_objects)}"
-    # )
+    com = Node("COM")
+    existing_planets = {"COM": com}
 
-    for child in all_children:
-        print(f"=== {child} ===")
-        orbit_count += len(find_parents(child, direct_parents))
-    #     parents = find_parent(obj, all_parents)
-    # orbit_count += len(parents)
+    child_parent_pairs = dict(line.split(")")[::-1] for line in data)
+    all_children = set(child_parent_pairs)  # 1805 planets + COM = 1806 objects
+
+    for child_name, parent_name in child_parent_pairs.items():
+        if parent_name in existing_planets:
+            parent = existing_planets[parent_name]
+        else:
+            parent = Node(name=parent_name)
+            existing_planets[parent_name] = parent
+        if child_name in existing_planets:
+            child = existing_planets[child_name]
+            child.parent = parent
+        else:
+            child = Node(name=child_name, parent=parent)
+        existing_planets[child_name] = child
+
+    orphans = {name: planet for name, planet in existing_planets.items() if planet.parent is None and planet.name != "COM"}
+
+    if orphans:
+        for child_name, parent_name in child_parent_pairs.items():
+            if child_name in orphans:
+                existing_planets[child_name].parent = existing_planets[parent_name]
+
+    orbits = [node.get_all_ancestors() for node in existing_planets.values()]
+    orbit_count = sum(len(ancestors) for ancestors in orbits)
     return orbit_count
-
-    # counted_objects = 0
-
-    # outermost_objects = find_outermost_objects(orbits)
-    # orbits = [orbit for orbit in orbits if orbit[1] not in outermost_objects]
-    # orbit_count += len(outermost_objects) + counted_objects
-    # counted_objects += len(outermost_objects)  # no!! fix this
-
-    # find objects NOT orbited by anything (RHS)
-    # pop them out of the list, count them as +1 each
-    # find objects NOT orbited by anything in the list
-    # pop them out, count all the pop items as +1 each
-    # continue
 
 
 if __name__ == "__main__":
