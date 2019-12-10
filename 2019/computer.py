@@ -18,9 +18,10 @@ class Computer:
     ):
         self.opcodes = opcodes
         self.advance_pointer = 0
-        self.initial_input = initial_input  # the phase setting
-        self.next_input = next_input  # output from the previous amplifier
+        self.initial_input = initial_input  # [d7] the phase setting
+        self.next_input = next_input  # [d7] output from the previous amplifier
         self.previous = previous
+        self.relative_base = 0
 
     def _get_params(self, index, params_number=3):
         modes = str(self.opcodes[index])[:-2]
@@ -30,6 +31,12 @@ class Computer:
                 params.append(self.opcodes[self.opcodes[index + i]])
             elif modes[-1] == "1":
                 params.append(self.opcodes[index + i])
+            elif modes[-1] == "2":
+                print(f"Relative mode! index: {index}, modes: {modes}, {i} iteration")
+                params.append(
+                    self.opcodes[self.relative_base + self.opcodes[index + i]]
+                )
+                print("params:", params, "params_number:", params_number)
             else:
                 raise ValueError(f"Unknkown mode! {modes[-1]}")
             modes = modes[:-1]
@@ -75,8 +82,18 @@ class Computer:
         For the 2nd part of the day 5 task, the input should be "5".
         """
         params_number = 1
-        # params = self._get_params(index, params_number)  # not needed here
-        result_index = self.opcodes[index + 1]
+        # params = self._get_params(index, params_number)
+        # TODO: what if the mode is 2 (relative)?!
+        # since this is a write operation, _get_params won't work :(
+        modes = str(self.opcodes[index])[:-2]
+        print("[OPCODE 3] modes:", modes, modes[-1])
+        if modes and modes[-1] == "2":
+            result_index = self.opcodes[index + params_number + self.relative_base]
+            print(f"index+1: {index + 1}, value: {self.opcodes[index + params_number]}")
+            print(f"result_index: {result_index}, relative_base: {self.relative_base}")
+        else:
+            result_index = self.opcodes[index + params_number]
+        # result_index = self.opcodes[index + 1]
         # value_to_write = int(input("Provide a number: "))
         if self.initial_input is not None:
             value_to_write = self.initial_input
@@ -145,6 +162,14 @@ class Computer:
             self.opcodes[self.opcodes[index + params_number]] = 0
         self.advance_pointer = params_number
 
+    def _process_opcode_9(self, index):
+        """ Changes the relative base by the value of its param. """
+        params_number = 1
+        params = self._get_params(index, params_number)
+        self.relative_base += params[0]
+        self.advance_pointer = params_number
+        print(f"[OPCODE 9] params: {params}, relative base: {self.relative_base}")
+
     def _process_opcode_99(self):
         pass
 
@@ -165,6 +190,8 @@ class Computer:
             return self._process_opcode_7
         elif opcode == 8:
             return self._process_opcode_8
+        elif opcode == 9:
+            return self._process_opcode_9
         elif opcode == 99:
             return self._process_opcode_99
         else:
@@ -180,16 +207,20 @@ class Computer:
                     continue
 
                 opcode = int(str(self.opcodes[index])[-2:])
+                # print("ASDASD index:", index, "OPCODE:", opcode)
 
-                if opcode == 99:
+                if opcode == 99 or opcode == 0:  # TMP! additional "memory"
                     break
 
                 opcode_processor = self._get_opcode_processor(opcode)
+                # try:
                 start_at = opcode_processor(index)
+                # except IndexError as err:
+                # breakpoint()
                 if start_at and start_at != index:
                     break  # leave the `for` loop
 
-            if opcode == 99:
+            if opcode == 99 or opcode == 0:  # additional "memory"
                 break  # Leave `while`, i.e. end the execution
 
         return self.opcodes[0]  # for compatibility with day 2 solution
