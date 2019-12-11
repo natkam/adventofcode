@@ -4,23 +4,25 @@ import typing
 with open("06_test_input", "r") as f:
     test_data = f.read().splitlines()
 
+with open("06_test_input_2", "r") as f:
+    test_data_2 = f.read().splitlines()
+
 with open("06_input", "r") as f:
     data = f.read().splitlines()
 
 
 class Node:
     def __init__(
-        self,
-        name: str,
-        parent: typing.Optional[Node] = None,
-        # children: typing.Optional[typing.List[Node]] = None,
+        self, name: str, parent: typing.Optional[Node] = None,
     ):
         self.name = name
         self.parent = parent
-        # self.children = children or []
 
     def __repr__(self):
         return f"<Node {self.name}>"
+
+    def __eq__(self, other: Node):
+        return self.name == other.name
 
     def get_all_ancestors(self):
         ancestors = []
@@ -33,17 +35,12 @@ class Node:
 
         return ancestors
 
-    # def get_direct_children(self, nodes: typing.List[Node]):
-    #     children = [node for node in nodes if node.parent == self]
-    #     return children
-
 
 def create_tree(data):
     com = Node("COM")
     existing_planets = {"COM": com}
 
     child_parent_pairs = dict(line.split(")")[::-1] for line in data)
-    all_children = set(child_parent_pairs)  # 1805 planets + COM = 1806 objects
 
     for child_name, parent_name in child_parent_pairs.items():
         if parent_name in existing_planets:
@@ -84,19 +81,22 @@ def solve_part_two(data):
     your_ancestors = existing_planets["YOU"].get_all_ancestors()
     santa_ancestors = existing_planets["SAN"].get_all_ancestors()
 
-    common_path = []
-    for your, santas in zip(your_ancestors, santa_ancestors):
-        if your == santas:
-            common_path.append(your)
+    common_part = 0
+    # start from COM; works because `__eq__` is overwritten
+    for i, planet in enumerate(your_ancestors[::-1]):
+        if planet in santa_ancestors[::-1]:
+            common_part += 1
         else:
             break
-    return len(your_ancestors) + len(santa_ancestors) - len(common_path)
+
+    return (len(your_ancestors) - common_part) + (len(santa_ancestors) - common_part)
 
 
 if __name__ == "__main__":
     # test_result = solve_first_part(test_data)
-    # print(test_result)
-    # assert test_result == 42, f"wrong result: {test_result}"
+    # assert test_result == 42, f"[PART 1] wrong result: {test_result}"
+    print(solve_first_part(data))
 
-    # print(solve_first_part(data))
+    # test_result_2 = print(solve_part_two(test_data_2))
+    # assert test_result_2 == 4, f"[PART 2] wrong result: {test_result_2}"
     print(solve_part_two(data))
