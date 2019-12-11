@@ -38,7 +38,7 @@ class Node:
     #     return children
 
 
-def solve_first_part(data):
+def create_tree(data):
     com = Node("COM")
     existing_planets = {"COM": com}
 
@@ -58,16 +58,39 @@ def solve_first_part(data):
             child = Node(name=child_name, parent=parent)
         existing_planets[child_name] = child
 
-    orphans = {name: planet for name, planet in existing_planets.items() if planet.parent is None and planet.name != "COM"}
+    orphans = {
+        name: planet
+        for name, planet in existing_planets.items()
+        if planet.parent is None and planet.name != "COM"
+    }
 
     if orphans:
         for child_name, parent_name in child_parent_pairs.items():
             if child_name in orphans:
                 existing_planets[child_name].parent = existing_planets[parent_name]
 
+    return existing_planets
+
+
+def solve_first_part(data):
+    existing_planets = create_tree(data)
     orbits = [node.get_all_ancestors() for node in existing_planets.values()]
     orbit_count = sum(len(ancestors) for ancestors in orbits)
     return orbit_count
+
+
+def solve_part_two(data):
+    existing_planets = create_tree(data)
+    your_ancestors = existing_planets["YOU"].get_all_ancestors()
+    santa_ancestors = existing_planets["SAN"].get_all_ancestors()
+
+    common_path = []
+    for your, santas in zip(your_ancestors, santa_ancestors):
+        if your == santas:
+            common_path.append(your)
+        else:
+            break
+    return len(your_ancestors) + len(santa_ancestors) - len(common_path)
 
 
 if __name__ == "__main__":
@@ -75,4 +98,5 @@ if __name__ == "__main__":
     # print(test_result)
     # assert test_result == 42, f"wrong result: {test_result}"
 
-    print(solve_first_part(data))
+    # print(solve_first_part(data))
+    print(solve_part_two(data))
