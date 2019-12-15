@@ -34,8 +34,8 @@ def solve_part_two():
         with open("07_input") as f:
             opcodes = [int(code) for code in f.read().split(",")]
 
-        # function that takes the previous instance and gets its output?
-        # or subprocesses/multiprocessing, or what?
+        # function that takes the previous instance and gets its output? asyncio,
+        # producer-consumer, or what?
 
         amp_A = Computer(opcodes.copy(), input_set[0], 0)
         amp_A.solve()
@@ -57,5 +57,5 @@ def solve_part_two():
 if __name__ == "__main__":
     # with open("07_input") as f:
     # opcodes = [int(code) for code in f.read().split(",")]
-    # print(solve_part_one())
-    print(solve_part_two())
+    print(solve_part_one())
+    # print(solve_part_two())

@@ -127,6 +127,12 @@ class Computer:
 
         return
 
+    def get_input(self, input_value=None):
+        """ An auxilary method to provide input for the opcode 3. """
+        if not input_value:
+            input_value = input("Provide a number: ")
+        self.next_input = int(input_value)
+
     def _process_opcode_4(self, index):
         """ Take the value specified by the param, and output it to sdtout. """
         params_number = 1
