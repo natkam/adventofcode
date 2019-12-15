@@ -37,15 +37,15 @@ def solve_part_two():
         # function that takes the previous instance and gets its output? asyncio,
         # producer-consumer, or what?
 
-        amp_A = Computer(opcodes.copy(), input_set[0], 0)
+        amp_A = Computer(opcodes.copy(), initial_input=0, next_input=input_set[0])
         amp_A.solve()
-        amp_B = Computer(opcodes.copy(), input_set[1], amp_A.next_input)
+        amp_B = Computer(opcodes.copy(), initial_input=input_set[1], previous=amp_A)
         amp_B.solve()
-        amp_C = Computer(opcodes.copy(), input_set[2], amp_B.next_input)
+        amp_C = Computer(opcodes.copy(), initial_input=input_set[2], previous=amp_B)
         amp_C.solve()
-        amp_D = Computer(opcodes.copy(), input_set[3], amp_C.next_input)
+        amp_D = Computer(opcodes.copy(), initial_input=input_set[3], previous=amp_C)
         amp_D.solve()
-        amp_E = Computer(opcodes.copy(), input_set[4], amp_D.next_input)
+        amp_E = Computer(opcodes.copy(), initial_input=input_set[4], previous=amp_D)
         amp_E.solve()
 
         if amp_E.next_input > max_signal:

@@ -121,7 +121,7 @@ class Computer:
             value_to_write = self.next_input
             self.next_input = None
         else:
-            value_to_write = int(input("Provide a number: "))
+            value_to_write = self.get_input()
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
 
