@@ -21,15 +21,14 @@ def test_cases_pt_1():
 
 
 if __name__ == "__main__":
-    test_cases_pt_1()
+    # test_cases_pt_1()
 
-    # TODO: handle mode 2 for "write" operations! - see opcode 3 method
-    # TODO 2: try to think of a better way to extend the "memory" (additional zeros)
-    # TODO 3: refactor the code methods - repeated code?
+    with open("09_input", "r") as f:
+        data = f.read()
 
-    # with open("09_input", "r") as f:
-    #     data = f.read()
-    #
-    # opcodes = [int(code) for code in data.split(",")]
-    # opcodes.extend(0 for _ in range(1000))
-    # Computer(opcodes, initial_input=1).solve()
+    opcodes = [int(code) for code in data.split(",")]
+    opcodes.extend(0 for _ in range(1000))
+    # part one
+    Computer(opcodes, initial_input=1).solve()
+    # port two
+    Computer(opcodes, initial_input=2).solve()

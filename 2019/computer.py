@@ -32,11 +32,11 @@ class Computer:
             elif modes[-1] == "1":
                 params.append(self.opcodes[index + i])
             elif modes[-1] == "2":
-                print(f"Relative mode! index: {index}, modes: {modes}, {i} iteration")
+                # print(f"Relative mode! index: {index}, modes: {modes}, {i} iteration")
                 params.append(
                     self.opcodes[self.relative_base + self.opcodes[index + i]]
                 )
-                print("params:", params, "params_number:", params_number)
+                # print("params:", params, "params_number:", params_number)
             else:
                 raise ValueError(f"Unknkown mode! {modes[-1]}")
             modes = modes[:-1]
@@ -51,8 +51,14 @@ class Computer:
         """
         params_number = 3
         params = self._get_params(index, params_number)
-        result_index = self.opcodes[index + 3]
         value_to_write = params[0] + params[1]
+
+        # the 3rd param of the opcode is a write param...
+        third_param = str(self.opcodes[index])[:-4]
+        if third_param == "2":
+            result_index = self.relative_base + self.opcodes[index + 3]
+        else:
+            result_index = self.opcodes[index + 3]
 
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
@@ -67,8 +73,14 @@ class Computer:
         """
         params_number = 3
         params = self._get_params(index, params_number)
-        result_index = self.opcodes[index + 3]
         value_to_write = params[0] * params[1]
+
+        # the 3rd param of the opcode is a write param...
+        third_param = str(self.opcodes[index])[:-4]
+        if third_param == "2":
+            result_index = self.relative_base + self.opcodes[index + 3]
+        else:
+            result_index = self.opcodes[index + 3]
 
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
@@ -82,17 +94,22 @@ class Computer:
         For the 2nd part of the day 5 task, the input should be "5".
         """
         params_number = 1
-        # params = self._get_params(index, params_number)
-        # TODO: what if the mode is 2 (relative)?!
-        # since this is a write operation, _get_params won't work :(
-        modes = str(self.opcodes[index])[:-2]
-        print("[OPCODE 3] modes:", modes, modes[-1])
-        if modes and modes[-1] == "2":
-            result_index = self.opcodes[index + params_number + self.relative_base]
-            print(f"index+1: {index + 1}, value: {self.opcodes[index + params_number]}")
-            print(f"result_index: {result_index}, relative_base: {self.relative_base}")
+
+        # the 3rd param of the opcode is a write param...
+        third_param = str(self.opcodes[index])[:-2]
+        if third_param == "2":
+            result_index = self.relative_base + self.opcodes[index + params_number]
         else:
             result_index = self.opcodes[index + params_number]
+
+        # modes = str(self.opcodes[index])[:-2]
+        # # print("[OPCODE 3] modes:", modes, modes[-1])
+        # if modes and modes[-1] == "2":
+        #     result_index = self.opcodes[index + params_number + self.relative_base]
+        #     # print(f"index+1: {index + 1}, value: {self.opcodes[index + params_number]}")
+        #     # print(f"result_index: {result_index}, relative_base: {self.relative_base}")
+        # else:
+        #     result_index = self.opcodes[index + params_number]
         # result_index = self.opcodes[index + 1]
         # value_to_write = int(input("Provide a number: "))
         if self.initial_input is not None:
@@ -146,20 +163,36 @@ class Computer:
         """ If 1st param < 2nd, set the position from the 3rd param to 1; else - to 0. """
         params_number = 3
         params = self._get_params(index, params_number)
-        if params[0] < params[1]:
-            self.opcodes[self.opcodes[index + params_number]] = 1
+
+        # the 3rd param of the opcode is a write param...
+        third_param = str(self.opcodes[index])[:-4]
+        if third_param == "2":
+            result_index = self.relative_base + self.opcodes[index + 3]
         else:
-            self.opcodes[self.opcodes[index + params_number]] = 0
+            result_index = self.opcodes[index + 3]
+
+        if params[0] < params[1]:
+            self.opcodes[result_index] = 1
+        else:
+            self.opcodes[result_index] = 0
         self.advance_pointer = params_number
 
     def _process_opcode_8(self, index):
         """ If 1st param == 2nd, set the position from the 3rd param to 1; else to 0. """
         params_number = 3
         params = self._get_params(index, params_number)
-        if params[0] == params[1]:
-            self.opcodes[self.opcodes[index + params_number]] = 1
+
+        # the 3rd param of the opcode is a write param...
+        third_param = str(self.opcodes[index])[:-4]
+        if third_param == "2":
+            result_index = self.relative_base + self.opcodes[index + 3]
         else:
-            self.opcodes[self.opcodes[index + params_number]] = 0
+            result_index = self.opcodes[index + 3]
+
+        if params[0] == params[1]:
+            self.opcodes[result_index] = 1
+        else:
+            self.opcodes[result_index] = 0
         self.advance_pointer = params_number
 
     def _process_opcode_9(self, index):
@@ -168,7 +201,7 @@ class Computer:
         params = self._get_params(index, params_number)
         self.relative_base += params[0]
         self.advance_pointer = params_number
-        print(f"[OPCODE 9] params: {params}, relative base: {self.relative_base}")
+        # print(f"[OPCODE 9] params: {params}, relative base: {self.relative_base}")
 
     def _process_opcode_99(self):
         pass
@@ -196,7 +229,6 @@ class Computer:
             return self._process_opcode_99
         else:
             raise ValueError(f"Unknown opcode! {opcode} - {type(opcode)}")
-        return processor
 
     def solve(self):
         start_at = 0
