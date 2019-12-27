@@ -4,7 +4,6 @@ from computer import Computer
 def test_cases_pt_1():
     opcodes = "109,1,204,-1,1001,100,1,100,1008,100,16,101,1006,101,0,99".split(",")
     opcodes = [int(code) for code in opcodes]
-    opcodes.extend(0 for _ in range(100))
     c = Computer(opcodes)
     c.solve()  # no input, outputs a copy of itself - i.e. self.opcodes? or stdout??
     print(c.opcodes, "\n")
@@ -21,14 +20,14 @@ def test_cases_pt_1():
 
 
 if __name__ == "__main__":
-    # test_cases_pt_1()
+    test_cases_pt_1()
 
     with open("09_input", "r") as f:
         data = f.read()
 
     opcodes = [int(code) for code in data.split(",")]
-    opcodes.extend(0 for _ in range(1000))
+
     # part one
     Computer(opcodes, initial_input=1).solve()
-    # port two
+    # part two
     Computer(opcodes, initial_input=2).solve()
