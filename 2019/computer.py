@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import typing
 
+# TODO: This solution works, but... Check the write-params (e.g. for opcodes 1, 2, 3, ...)
+# TODO: to see if an IndexError can occur there!
+# TODO:#2 Refactor the code to handle both read and write params together, nicely
+
 
 class Computer:
     """ A slightly modified version of the solution to day 5, pt. 2.
 
-    Solves the problem in day 7, but works for day 5 too.
+    Solves the problem in days 7 and 9, but works for day 5 too.
     """
 
     def __init__(
@@ -20,25 +24,33 @@ class Computer:
         self.advance_pointer = 0
         self.initial_input = initial_input  # [d7] the phase setting
         self.next_input = next_input  # [d7] output from the previous amplifier
-        self.previous = previous
+        self.previous = previous  # [d7] the previous amplifier... not used yet??
         self.relative_base = 0
+
+    def _extend_opcodes(self, target_index):
+        missing_zeros = range(target_index - len(self.opcodes) + 1)
+        self.opcodes.extend(0 for _ in missing_zeros)
+
+    def _get_target_index(self, modes, param_index):
+        if not modes or modes[-1] == "0":
+            return self.opcodes[param_index]
+        elif modes[-1] == "1":
+            return param_index
+        elif modes[-1] == "2":
+            return self.relative_base + self.opcodes[param_index]
+        else:
+            raise ValueError(f"Unknkown mode! {modes[-1]}")
 
     def _get_params(self, index, params_number=3):
         modes = str(self.opcodes[index])[:-2]
         params = []
         for i in range(1, params_number + 1):  # max 3 params allowed
-            if not modes or modes[-1] == "0":
-                params.append(self.opcodes[self.opcodes[index + i]])
-            elif modes[-1] == "1":
-                params.append(self.opcodes[index + i])
-            elif modes[-1] == "2":
-                # print(f"Relative mode! index: {index}, modes: {modes}, {i} iteration")
-                params.append(
-                    self.opcodes[self.relative_base + self.opcodes[index + i]]
-                )
-                # print("params:", params, "params_number:", params_number)
-            else:
-                raise ValueError(f"Unknkown mode! {modes[-1]}")
+            target_index = self._get_target_index(modes, index + i)
+
+            if len(self.opcodes) <= target_index:
+                self._extend_opcodes(target_index)
+
+            params.append(self.opcodes[target_index])
             modes = modes[:-1]
 
         return params
@@ -102,16 +114,6 @@ class Computer:
         else:
             result_index = self.opcodes[index + params_number]
 
-        # modes = str(self.opcodes[index])[:-2]
-        # # print("[OPCODE 3] modes:", modes, modes[-1])
-        # if modes and modes[-1] == "2":
-        #     result_index = self.opcodes[index + params_number + self.relative_base]
-        #     # print(f"index+1: {index + 1}, value: {self.opcodes[index + params_number]}")
-        #     # print(f"result_index: {result_index}, relative_base: {self.relative_base}")
-        # else:
-        #     result_index = self.opcodes[index + params_number]
-        # result_index = self.opcodes[index + 1]
-        # value_to_write = int(input("Provide a number: "))
         if self.initial_input is not None:
             value_to_write = self.initial_input
             self.initial_input = None
@@ -159,6 +161,8 @@ class Computer:
 
         self.advance_pointer = params_number
 
+        return
+
     def _process_opcode_7(self, index):
         """ If 1st param < 2nd, set the position from the 3rd param to 1; else - to 0. """
         params_number = 3
@@ -176,6 +180,8 @@ class Computer:
         else:
             self.opcodes[result_index] = 0
         self.advance_pointer = params_number
+
+        return
 
     def _process_opcode_8(self, index):
         """ If 1st param == 2nd, set the position from the 3rd param to 1; else to 0. """
@@ -195,13 +201,16 @@ class Computer:
             self.opcodes[result_index] = 0
         self.advance_pointer = params_number
 
+        return
+
     def _process_opcode_9(self, index):
         """ Changes the relative base by the value of its param. """
         params_number = 1
         params = self._get_params(index, params_number)
         self.relative_base += params[0]
         self.advance_pointer = params_number
-        # print(f"[OPCODE 9] params: {params}, relative base: {self.relative_base}")
+
+        return
 
     def _process_opcode_99(self):
         pass
@@ -239,20 +248,15 @@ class Computer:
                     continue
 
                 opcode = int(str(self.opcodes[index])[-2:])
-                # print("ASDASD index:", index, "OPCODE:", opcode)
 
-                if opcode == 99 or opcode == 0:  # TMP! additional "memory"
+                if opcode == 99 or opcode == 0:  # additional "memory"
                     break
 
                 opcode_processor = self._get_opcode_processor(opcode)
-                # try:
                 start_at = opcode_processor(index)
-                # except IndexError as err:
-                # breakpoint()
+
                 if start_at and start_at != index:
                     break  # leave the `for` loop
 
-            if opcode == 99 or opcode == 0:  # additional "memory"
+            if start_at is None or opcode == 99 or opcode == 0:  # 0 - additional "memory"
                 break  # Leave `while`, i.e. end the execution
-
-        return self.opcodes[0]  # for compatibility with day 2 solution
