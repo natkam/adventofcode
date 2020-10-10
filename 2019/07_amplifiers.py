@@ -10,15 +10,23 @@ def solve_part_one():
         with open("07_input") as f:
             opcodes = [int(code) for code in f.read().split(",")]
 
-        amp_A = Computer(opcodes.copy(), input_set[0], 0)
+        amp_A = Computer(opcodes.copy(), initial_input=input_set[0], next_input=0)
         amp_A.solve()
-        amp_B = Computer(opcodes.copy(), input_set[1], amp_A.next_input)
+        amp_B = Computer(
+            opcodes.copy(), initial_input=input_set[1], next_input=amp_A.next_input
+        )
         amp_B.solve()
-        amp_C = Computer(opcodes.copy(), input_set[2], amp_B.next_input)
+        amp_C = Computer(
+            opcodes.copy(), initial_input=input_set[2], next_input=amp_B.next_input
+        )
         amp_C.solve()
-        amp_D = Computer(opcodes.copy(), input_set[3], amp_C.next_input)
+        amp_D = Computer(
+            opcodes.copy(), initial_input=input_set[3], next_input=amp_C.next_input
+        )
         amp_D.solve()
-        amp_E = Computer(opcodes.copy(), input_set[4], amp_D.next_input)
+        amp_E = Computer(
+            opcodes.copy(), initial_input=input_set[4], next_input=amp_D.next_input
+        )
         amp_E.solve()
 
         if amp_E.next_input > max_signal:
@@ -34,10 +42,7 @@ def solve_part_two():
         with open("07_input") as f:
             opcodes = [int(code) for code in f.read().split(",")]
 
-        # function that takes the previous instance and gets its output? asyncio,
-        # producer-consumer, or what?
-
-        amp_A = Computer(opcodes.copy(), initial_input=0, next_input=input_set[0])
+        amp_A = Computer(opcodes.copy(), initial_input=input_set[0], next_input=0)
         amp_A.solve()
         amp_B = Computer(opcodes.copy(), initial_input=input_set[1], previous=amp_A)
         amp_B.solve()
@@ -47,6 +52,14 @@ def solve_part_two():
         amp_D.solve()
         amp_E = Computer(opcodes.copy(), initial_input=input_set[4], previous=amp_D)
         amp_E.solve()
+        amp_A.previous = amp_E
+
+        # while amp_A.is_waiting_for_signal:
+        #     amp_A.resume()
+        #     amp_B.resume()
+        #     amp_C.resume()
+        #     amp_D.resume()
+        #     amp_E.resume()
 
         if amp_E.next_input > max_signal:
             max_signal = amp_E.next_input

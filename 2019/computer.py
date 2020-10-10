@@ -1,37 +1,53 @@
 from __future__ import annotations
 
-import typing
+from typing import List, Optional, Callable, Union, cast
+
 
 # TODO: This solution works, but... Check the write-params (e.g. for opcodes 1, 2, 3, ...)
 # TODO: to see if an IndexError can occur there!
 # TODO:#2 Refactor the code to handle both read and write params together, nicely
 
 
+# class PauseExecutionException(Exception):
+#     pass
+
+
 class Computer:
-    """ A slightly modified version of the solution to day 5, pt. 2.
+    """A slightly modified version of the solution to day 5, pt. 2.
 
     Solves the problem in days 7 and 9, but works for day 5 too.
     """
 
+    instance_counter = 0
+
     def __init__(
         self,
-        opcodes: typing.List[int],
-        initial_input: typing.Optional[int] = None,
-        next_input: typing.Optional[int] = None,
-        previous: typing.Optional[Computer] = None,
+        opcodes: List[int],
+        initial_input: Optional[int] = None,
+        next_input: Optional[int] = None,
+        previous: Optional[Computer] = None,
     ):
-        self.opcodes = opcodes
-        self.advance_pointer = 0
-        self.initial_input = initial_input  # [d7] the phase setting
-        self.next_input = next_input  # [d7] output from the previous amplifier
-        self.previous = previous  # [d7] the previous amplifier... not used yet??
-        self.relative_base = 0
+        self.opcodes: List[int] = opcodes
+        self.advance_pointer: int = 0
+        self.initial_input: Optional[int] = initial_input  # [d7] phase setting
+        self.next_input: Optional[int] = next_input  # [d7] output from prev. amplifier
+        self.previous: Optional[Computer] = previous  # [d7] prev. amplifier
+        self.relative_base: int = 0
 
-    def _extend_opcodes(self, target_index):
+        self._set_name()
+
+    def _set_name(self) -> None:
+        """Automatically set the name attr. (A, B, C, ...) for every created instance."""
+        offset = ord("A")
+        self.name = chr(self.instance_counter + offset)
+        Computer.instance_counter += 1
+
+    def _extend_opcodes(self, target_index: int) -> None:
+        """Add missing 'memory', i.e. zeros at the end of the opcodes list."""
         missing_zeros = range(target_index - len(self.opcodes) + 1)
         self.opcodes.extend(0 for _ in missing_zeros)
 
-    def _get_target_index(self, modes, param_index):
+    def _get_target_index(self, modes: str, param_index: int):
         if not modes or modes[-1] == "0":
             return self.opcodes[param_index]
         elif modes[-1] == "1":
@@ -41,9 +57,9 @@ class Computer:
         else:
             raise ValueError(f"Unknkown mode! {modes[-1]}")
 
-    def _get_params(self, index, params_number=3):
-        modes = str(self.opcodes[index])[:-2]
-        params = []
+    def _get_params(self, index: int, params_number: int = 3) -> List[int]:
+        modes: str = str(self.opcodes[index])[:-2]
+        params: List[int] = []
         for i in range(1, params_number + 1):  # max 3 params allowed
             target_index = self._get_target_index(modes, index + i)
 
@@ -55,8 +71,8 @@ class Computer:
 
         return params
 
-    def _process_opcode_1(self, index):
-        """ Sum together two numbers and write the result to a specified position.
+    def _process_opcode_1(self, index: int) -> None:
+        """Sum together two numbers and write the result to a specified position.
 
         The numbers to sum are specified by the first two params.
         The third param specifies the position to write the result.
@@ -66,8 +82,8 @@ class Computer:
         value_to_write = params[0] + params[1]
 
         # the 3rd param of the opcode is a write param...
-        third_param = str(self.opcodes[index])[:-4]
-        if third_param == "2":
+        third_param_mode = str(self.opcodes[index])[:-4]
+        if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
         else:
             result_index = self.opcodes[index + 3]
@@ -77,8 +93,8 @@ class Computer:
 
         return
 
-    def _process_opcode_2(self, index):
-        """ Multiply two numbers and write the result to a specified position.
+    def _process_opcode_2(self, index: int) -> None:
+        """Multiply two numbers and write the result to a specified position.
 
         The numbers to multiply are specified by the first two params.
         The third param specifies the position to write the result.
@@ -87,29 +103,29 @@ class Computer:
         params = self._get_params(index, params_number)
         value_to_write = params[0] * params[1]
 
-        # the 3rd param of the opcode is a write param...
-        third_param = str(self.opcodes[index])[:-4]
-        if third_param == "2":
-            result_index = self.relative_base + self.opcodes[index + 3]
+        # the 3rd param of the opcode is the where-to-write param
+        third_param_mode = str(self.opcodes[index])[:-4]
+        if third_param_mode == "2":
+            result_index = self.relative_base + self.opcodes[index + params_number]
         else:
-            result_index = self.opcodes[index + 3]
+            result_index = self.opcodes[index + params_number]
 
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
 
         return
 
-    def _process_opcode_3(self, index):
-        """ Take the input and write it to the specified position.
+    def _process_opcode_3(self, index: int) -> None:
+        """Take the input and write it to the specified position.
 
         For the 1st part of the day 5 task, the input should be "1".
         For the 2nd part of the day 5 task, the input should be "5".
         """
         params_number = 1
 
-        # the 3rd param of the opcode is a write param...
-        third_param = str(self.opcodes[index])[:-2]
-        if third_param == "2":
+        # the param of the opcode is the where-to-write param
+        param_mode = str(self.opcodes[index])[:-2]
+        if param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + params_number]
         else:
             result_index = self.opcodes[index + params_number]
@@ -121,30 +137,32 @@ class Computer:
             value_to_write = self.next_input
             self.next_input = None
         else:
-            value_to_write = self.get_input()
+            value_to_write = self._get_input()
         self.opcodes[result_index] = value_to_write
         self.advance_pointer = params_number
 
         return
 
-    def get_input(self, input_value=None):
-        """ An auxilary method to provide input for the opcode 3. """
-        if not input_value:
-            input_value = input("Provide a number: ")
+    def _get_input(self) -> int:
+        """An auxiliary method to provide input for the opcode 3."""
+        input_value = input("Provide a number: ")
         self.next_input = int(input_value)
 
-    def _process_opcode_4(self, index):
-        """ Take the value specified by the param, and output it to sdtout. """
+        return self.next_input
+
+    def _process_opcode_4(self, index: int) -> None:
+        """Take the value specified by the param, and output it to stdout."""
         params_number = 1
         params = self._get_params(index, params_number)
-        print("[OPCODE 4]", params[0])
-        self.next_input = params[0]
+        output = params[0]
+        print("[OPCODE 4]", output)
+        self.next_input = output
         self.advance_pointer = params_number
 
         return
 
-    def _process_opcode_5(self, index):
-        """ If the 1st param != 0, move the pointer to the value from the 2nd param. """
+    def _process_opcode_5(self, index: int) -> Optional[int]:
+        """If the 1st param != 0, move the pointer to the value from the 2nd param."""
         params_number = 2
         params = self._get_params(index, params_number)
         if params[0] != 0:
@@ -155,8 +173,10 @@ class Computer:
 
         self.advance_pointer = params_number
 
-    def _process_opcode_6(self, index):
-        """ If the 1st param is 0, move the pointer to the value from the 2nd param. """
+        return None
+
+    def _process_opcode_6(self, index: int) -> Optional[int]:
+        """If the 1st param is 0, move the pointer to the value from the 2nd param."""
         params_number = 2
         params = self._get_params(index, params_number)
         if params[0] == 0:
@@ -167,16 +187,16 @@ class Computer:
 
         self.advance_pointer = params_number
 
-        return
+        return None
 
-    def _process_opcode_7(self, index):
-        """ If 1st param < 2nd, set the position from the 3rd param to 1; else - to 0. """
+    def _process_opcode_7(self, index: int) -> None:
+        """If 1st param < 2nd, set the position from the 3rd param to 1; else - to 0."""
         params_number = 3
         params = self._get_params(index, params_number)
 
-        # the 3rd param of the opcode is a write param...
-        third_param = str(self.opcodes[index])[:-4]
-        if third_param == "2":
+        # the 3rd param of the opcode is the where-to-write param
+        third_param_mode = str(self.opcodes[index])[:-4]
+        if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
         else:
             result_index = self.opcodes[index + 3]
@@ -189,14 +209,14 @@ class Computer:
 
         return
 
-    def _process_opcode_8(self, index):
-        """ If 1st param == 2nd, set the position from the 3rd param to 1; else to 0. """
+    def _process_opcode_8(self, index: int) -> None:
+        """If 1st param == 2nd, set the position from the 3rd param to 1; else to 0."""
         params_number = 3
         params = self._get_params(index, params_number)
 
-        # the 3rd param of the opcode is a write param...
-        third_param = str(self.opcodes[index])[:-4]
-        if third_param == "2":
+        # the 3rd param of the opcode is the where-to-write param
+        third_param_mode = str(self.opcodes[index])[:-4]
+        if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
         else:
             result_index = self.opcodes[index + 3]
@@ -209,8 +229,8 @@ class Computer:
 
         return
 
-    def _process_opcode_9(self, index):
-        """ Changes the relative base by the value of its param. """
+    def _process_opcode_9(self, index: int) -> None:
+        """Change the relative base by the value of the opcode's param."""
         params_number = 1
         params = self._get_params(index, params_number)
         self.relative_base += params[0]
@@ -218,36 +238,23 @@ class Computer:
 
         return
 
-    def _process_opcode_99(self):
+    def _process_opcode_99(self, _: int) -> None:
         pass
 
-    def _get_opcode_processor(self, opcode: int):
-        if opcode == 1:
-            return self._process_opcode_1
-        elif opcode == 2:
-            return self._process_opcode_2
-        elif opcode == 3:
-            return self._process_opcode_3
-        elif opcode == 4:
-            return self._process_opcode_4
-        elif opcode == 5:
-            return self._process_opcode_5
-        elif opcode == 6:
-            return self._process_opcode_6
-        elif opcode == 7:
-            return self._process_opcode_7
-        elif opcode == 8:
-            return self._process_opcode_8
-        elif opcode == 9:
-            return self._process_opcode_9
-        elif opcode == 99:
-            return self._process_opcode_99
-        else:
+    def _get_opcode_processor(
+        self, opcode: int
+    ) -> Callable[[int], Union[Optional[int], None]]:
+        try:
+            processor = getattr(self, f"_process_opcode_{opcode}", None)
+        except AttributeError:
             raise ValueError(f"Unknown opcode! {opcode} - {type(opcode)}")
 
-    def solve(self):
-        start_at = 0
+        return processor
+
+    def solve(self) -> None:
+        start_at: Optional[int] = 0
         while True:
+            start_at = cast(int, start_at)
             for index in range(start_at, len(self.opcodes)):
                 if self.advance_pointer != 0:
                     self.advance_pointer -= 1
@@ -264,5 +271,11 @@ class Computer:
                 if start_at and start_at != index:
                     break  # leave the `for` loop
 
-            if start_at is None or opcode == 99 or opcode == 0:  # 0 - additional "memory"
+            if start_at is None or opcode == 99 or opcode == 0:
+                # 0 - additional "memory"
                 break  # Leave `while`, i.e. end the execution
+
+    #
+    # def resume(self):
+    #     """Resume paused program execution, using input from the previous computer."""
+    #     self.solve()
