@@ -3,7 +3,7 @@ from computer import Computer
 
 def test_case_pt_1():
     opcodes = [int(code) for code in "3,0,4,0,99".split(",")]
-    Computer(opcodes).solve()  # prints "1"
+    Computer(opcodes).solve()  # prints the value received as the input
 
 
 def test_case_pt_2():
@@ -38,8 +38,8 @@ def test_case_pt_2():
 
 
 if __name__ == "__main__":
-    # test_case_pt_1()
-    # test_case_pt_2()
+    test_case_pt_1()
+    test_case_pt_2()
 
     with open("05_input", "r") as f:
         opcodes = [int(code) for code in f.read().split(",")]

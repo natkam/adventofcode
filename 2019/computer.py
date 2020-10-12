@@ -120,17 +120,22 @@ class Computer:
     def _process_opcode_3(self, index: int) -> None:
         """Take the input and write it to the specified position.
 
-        For the 1st part of the day 5 task, the input should be "1".
-        For the 2nd part of the day 5 task, the input should be "5".
+        The `_get_params` method cannot be used here, because it retrieves
+        the value of `self.opcodes[result_index]`, but the opcode 3 means
+        that something has to be written to `self.opcodes[result_index]`;
+        the current value stored there is irrelevant.
         """
         params_number = 1
 
         # The param of the opcode is the where-to-write param
         param_mode = str(self.opcodes[index])[:-2]
         if param_mode == "2":
-            result_index = self.relative_base + self.opcodes[index + params_number]
+            result_index = self.relative_base + self.opcodes[index + 1]
         else:
-            result_index = self.opcodes[index + params_number]
+            result_index = self.opcodes[index + 1]
+        if len(self.opcodes) <= result_index:
+            self._extend_opcodes(result_index)
+        # TODO: Consider using the _get_params method, it extends memory too
 
         if self.inputs:
             value_to_write = self.inputs.pop(0)
@@ -143,10 +148,10 @@ class Computer:
 
     def _get_input(self) -> int:
         """An auxiliary method to provide input for the opcode 3."""
-        input_value = input("Provide a number: ")
-        self.next_input = int(input_value)
+        input_value = int(input("Provide a number: "))
+        # self.inputs.append(input_value)
 
-        return self.next_input
+        return input_value
 
     def _process_opcode_4(self, index: int) -> None:
         """Take the value specified by the param, and output it to stdout."""
@@ -276,8 +281,8 @@ class Computer:
                     self.is_paused = True
                     return
 
-                if self.start_at and self.start_at != index:
-                    break  # leave the `for` loop
+                if self.start_at is not None and self.start_at != index:
+                    break  # Set the instruction pointer to a new value
 
             if self.start_at is None or opcode == 99 or opcode == 0:
                 # 0 - additional "memory"
