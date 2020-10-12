@@ -43,8 +43,8 @@ if __name__ == "__main__":
 
     with open("05_input", "r") as f:
         opcodes = [int(code) for code in f.read().split(",")]
-    Computer(opcodes, initial_input=1).solve()
+    Computer(opcodes, inputs=[1]).solve()
 
     with open("05_input", "r") as f:
         opcodes = [int(code) for code in f.read().split(",")]
-    Computer(opcodes, initial_input=5).solve()
+    Computer(opcodes, inputs=[5]).solve()

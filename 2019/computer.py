@@ -23,16 +23,14 @@ class Computer:
     def __init__(
         self,
         opcodes: List[int],
-        initial_input: Optional[int] = None,
-        next_input: Optional[int] = None,
+        inputs: List[int] = None,
         previous: Optional[Computer] = None,
     ):
         self.opcodes: List[int] = opcodes
         self.advance_pointer: int = 0
         self.relative_base: int = 0
         self.start_at: Optional[int] = 0
-        self.initial_input: Optional[int] = initial_input  # [d7] phase setting
-        self.next_input: Optional[int] = next_input  # [d7] set to output from prev. amplifier
+        self.inputs: List[int] = inputs or [] # phase setting and following inputs (opcode 3)
         self.output_for_next_computer: Optional[int] = None  # [d7]
         self.previous: Optional[Computer] = previous  # [d7] prev. amplifier
 
@@ -134,12 +132,8 @@ class Computer:
         else:
             result_index = self.opcodes[index + params_number]
 
-        if self.initial_input is not None:
-            value_to_write = self.initial_input
-            self.initial_input = None
-        elif self.next_input is not None:
-            value_to_write = self.next_input
-            self.next_input = None
+        if self.inputs:
+            value_to_write = self.inputs.pop(0)
         else:
             value_to_write = self._get_input()
         self.opcodes[result_index] = value_to_write
@@ -159,15 +153,15 @@ class Computer:
         params_number = 1
         params = self._get_params(index, params_number)
         output = params[0]
-        # print("[OPCODE 4]", output)
         self.advance_pointer = params_number
 
         if self.previous is not None:  # [d7, pt.2]
             # The execution should pause and pass the output to the next computer
             self.output_for_next_computer = output
             raise PauseExecutionException
-        else:  # other days' riddles
-            self.next_input = output
+        else:  # [other days' puzzles]
+            print("[OPCODE 4]", output)
+            self.inputs.append(output)
 
         return
 
@@ -262,7 +256,6 @@ class Computer:
         return processor
 
     def solve(self) -> None:
-        # start_at: Optional[int]
         while True:
             self.start_at = cast(int, self.start_at)
             for index in range(self.start_at, len(self.opcodes)):
@@ -290,10 +283,11 @@ class Computer:
                 # 0 - additional "memory"
                 break  # Leave `while`, i.e. end the execution
 
+    def solve_in_loop(self):
+        """Execute the program, or resume paused execution in a feedback loop.
 
-    def resume(self):
-        """Resume paused program execution, using input from the previous computer."""
-        # print(f"amp_{self.name}: RESUMING (start_at {self.start_at})")
+        Uses input from the previous computer, if there is any."""
         self.is_paused = False
-        self.next_input = self.previous.output_for_next_computer
+        if self.previous.output_for_next_computer is not None:
+            self.inputs.append(self.previous.output_for_next_computer)
         self.solve()

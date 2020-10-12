@@ -10,27 +10,19 @@ def solve_part_one():
         with open("07_input") as f:
             opcodes = [int(code) for code in f.read().split(",")]
 
-        amp_A = Computer(opcodes.copy(), initial_input=input_set[0], next_input=0)
+        amp_A = Computer(opcodes.copy(), inputs=[input_set[0], 0])
         amp_A.solve()
-        amp_B = Computer(
-            opcodes.copy(), initial_input=input_set[1], next_input=amp_A.next_input
-        )
+        amp_B = Computer(opcodes.copy(), inputs=[input_set[1], amp_A.inputs[-1]])
         amp_B.solve()
-        amp_C = Computer(
-            opcodes.copy(), initial_input=input_set[2], next_input=amp_B.next_input
-        )
+        amp_C = Computer(opcodes.copy(), inputs=[input_set[2], amp_B.inputs[-1]])
         amp_C.solve()
-        amp_D = Computer(
-            opcodes.copy(), initial_input=input_set[3], next_input=amp_C.next_input
-        )
+        amp_D = Computer(opcodes.copy(), inputs=[input_set[3], amp_C.inputs[-1]])
         amp_D.solve()
-        amp_E = Computer(
-            opcodes.copy(), initial_input=input_set[4], next_input=amp_D.next_input
-        )
+        amp_E = Computer(opcodes.copy(), inputs=[input_set[4], amp_D.inputs[-1]])
         amp_E.solve()
 
-        if amp_E.next_input > max_signal:
-            max_signal = amp_E.next_input
+        if amp_E.inputs[-1] > max_signal:
+            max_signal = amp_E.inputs[-1]
 
     return max_signal
 
@@ -42,26 +34,21 @@ def solve_part_two():
         with open("07_input") as f:
             opcodes = [int(code) for code in f.read().split(",")]
 
-        amp_A = Computer(opcodes.copy(), initial_input=input_set[0], next_input=0)
-        amp_B = Computer(opcodes.copy(), initial_input=input_set[1], previous=amp_A)
-        amp_C = Computer(opcodes.copy(), initial_input=input_set[2], previous=amp_B)
-        amp_D = Computer(opcodes.copy(), initial_input=input_set[3], previous=amp_C)
-        amp_E = Computer(opcodes.copy(), initial_input=input_set[4], previous=amp_D)
+        amp_A = Computer(opcodes.copy(), inputs=[input_set[0], 0])
+        amp_B = Computer(opcodes.copy(), inputs=[input_set[1]], previous=amp_A)
+        amp_C = Computer(opcodes.copy(), inputs=[input_set[2]], previous=amp_B)
+        amp_D = Computer(opcodes.copy(), inputs=[input_set[3]], previous=amp_C)
+        amp_E = Computer(opcodes.copy(), inputs=[input_set[4]], previous=amp_D)
         amp_A.previous = amp_E
 
-        amp_A.solve()
-
-        amp_B.resume()
-        amp_C.resume()
-        amp_D.resume()
-        amp_E.resume()
+        amp_E.is_paused = True
 
         while amp_E.is_paused:
-            amp_A.resume()
-            amp_B.resume()
-            amp_C.resume()
-            amp_D.resume()
-            amp_E.resume()
+            amp_A.solve_in_loop()
+            amp_B.solve_in_loop()
+            amp_C.solve_in_loop()
+            amp_D.solve_in_loop()
+            amp_E.solve_in_loop()
 
         if amp_E.output_for_next_computer > max_signal:
             max_signal = amp_E.output_for_next_computer

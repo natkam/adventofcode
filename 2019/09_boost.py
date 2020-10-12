@@ -28,6 +28,6 @@ if __name__ == "__main__":
     opcodes = [int(code) for code in data.split(",")]
 
     # part one
-    Computer(opcodes, initial_input=1).solve()
+    Computer(opcodes, inputs=[1]).solve()
     # part two
-    Computer(opcodes, initial_input=2).solve()
+    Computer(opcodes, inputs=[2]).solve()
