@@ -21,7 +21,9 @@ class Node:
     def __repr__(self):
         return f"<Node {self.name}>"
 
-    def __eq__(self, other: Node):
+    def __eq__(self, other: object):
+        if not isinstance(other, Node):
+            return NotImplemented
         return self.name == other.name
 
     def get_all_ancestors(self):
