@@ -8,8 +8,8 @@ from typing import List, Optional, Callable, Union, cast
 # TODO:#2 Refactor the code to handle both read and write params together, nicely
 
 
-# class PauseExecutionException(Exception):
-#     pass
+class PauseExecutionException(Exception):
+    pass
 
 
 class Computer:
@@ -29,10 +29,14 @@ class Computer:
     ):
         self.opcodes: List[int] = opcodes
         self.advance_pointer: int = 0
-        self.initial_input: Optional[int] = initial_input  # [d7] phase setting
-        self.next_input: Optional[int] = next_input  # [d7] output from prev. amplifier
-        self.previous: Optional[Computer] = previous  # [d7] prev. amplifier
         self.relative_base: int = 0
+        self.start_at: Optional[int] = 0
+        self.initial_input: Optional[int] = initial_input  # [d7] phase setting
+        self.next_input: Optional[int] = next_input  # [d7] set to output from prev. amplifier
+        self.output_for_next_computer: Optional[int] = None  # [d7]
+        self.previous: Optional[Computer] = previous  # [d7] prev. amplifier
+
+        self.is_paused: bool = False
 
         self._set_name()
 
@@ -81,7 +85,7 @@ class Computer:
         params = self._get_params(index, params_number)
         value_to_write = params[0] + params[1]
 
-        # the 3rd param of the opcode is a write param...
+        # The 3rd param of the opcode is a write param...
         third_param_mode = str(self.opcodes[index])[:-4]
         if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
@@ -103,7 +107,7 @@ class Computer:
         params = self._get_params(index, params_number)
         value_to_write = params[0] * params[1]
 
-        # the 3rd param of the opcode is the where-to-write param
+        # The 3rd param of the opcode is the where-to-write param
         third_param_mode = str(self.opcodes[index])[:-4]
         if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + params_number]
@@ -123,7 +127,7 @@ class Computer:
         """
         params_number = 1
 
-        # the param of the opcode is the where-to-write param
+        # The param of the opcode is the where-to-write param
         param_mode = str(self.opcodes[index])[:-2]
         if param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + params_number]
@@ -155,9 +159,15 @@ class Computer:
         params_number = 1
         params = self._get_params(index, params_number)
         output = params[0]
-        print("[OPCODE 4]", output)
-        self.next_input = output
+        # print("[OPCODE 4]", output)
         self.advance_pointer = params_number
+
+        if self.previous is not None:  # [d7, pt.2]
+            # The execution should pause and pass the output to the next computer
+            self.output_for_next_computer = output
+            raise PauseExecutionException
+        else:  # other days' riddles
+            self.next_input = output
 
         return
 
@@ -166,7 +176,7 @@ class Computer:
         params_number = 2
         params = self._get_params(index, params_number)
         if params[0] != 0:
-            # set the instruction pointer to the value from the second parameter
+            # Set the instruction pointer to the value from the second parameter
             start_at = params[1]
 
             return start_at
@@ -180,7 +190,7 @@ class Computer:
         params_number = 2
         params = self._get_params(index, params_number)
         if params[0] == 0:
-            # set the instruction pointer to the value from the second parameter
+            # Set the instruction pointer to the value from the second parameter
             start_at = params[1]
 
             return start_at
@@ -194,7 +204,7 @@ class Computer:
         params_number = 3
         params = self._get_params(index, params_number)
 
-        # the 3rd param of the opcode is the where-to-write param
+        # The 3rd param of the opcode is the where-to-write param
         third_param_mode = str(self.opcodes[index])[:-4]
         if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
@@ -214,7 +224,7 @@ class Computer:
         params_number = 3
         params = self._get_params(index, params_number)
 
-        # the 3rd param of the opcode is the where-to-write param
+        # The 3rd param of the opcode is the where-to-write param
         third_param_mode = str(self.opcodes[index])[:-4]
         if third_param_mode == "2":
             result_index = self.relative_base + self.opcodes[index + 3]
@@ -252,30 +262,38 @@ class Computer:
         return processor
 
     def solve(self) -> None:
-        start_at: Optional[int] = 0
+        # start_at: Optional[int]
         while True:
-            start_at = cast(int, start_at)
-            for index in range(start_at, len(self.opcodes)):
+            self.start_at = cast(int, self.start_at)
+            for index in range(self.start_at, len(self.opcodes)):
                 if self.advance_pointer != 0:
                     self.advance_pointer -= 1
                     continue
 
                 opcode = int(str(self.opcodes[index])[-2:])
 
-                if opcode == 99 or opcode == 0:  # additional "memory"
+                if opcode == 99 or opcode == 0:  # 0 - additional "memory"
                     break
 
                 opcode_processor = self._get_opcode_processor(opcode)
-                start_at = opcode_processor(index)
+                try:
+                    self.start_at = opcode_processor(index)
+                except PauseExecutionException:
+                    self.start_at = index + 1
+                    self.is_paused = True
+                    return
 
-                if start_at and start_at != index:
+                if self.start_at and self.start_at != index:
                     break  # leave the `for` loop
 
-            if start_at is None or opcode == 99 or opcode == 0:
+            if self.start_at is None or opcode == 99 or opcode == 0:
                 # 0 - additional "memory"
                 break  # Leave `while`, i.e. end the execution
 
-    #
-    # def resume(self):
-    #     """Resume paused program execution, using input from the previous computer."""
-    #     self.solve()
+
+    def resume(self):
+        """Resume paused program execution, using input from the previous computer."""
+        # print(f"amp_{self.name}: RESUMING (start_at {self.start_at})")
+        self.is_paused = False
+        self.next_input = self.previous.output_for_next_computer
+        self.solve()

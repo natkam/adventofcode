@@ -43,32 +43,34 @@ def solve_part_two():
             opcodes = [int(code) for code in f.read().split(",")]
 
         amp_A = Computer(opcodes.copy(), initial_input=input_set[0], next_input=0)
-        amp_A.solve()
         amp_B = Computer(opcodes.copy(), initial_input=input_set[1], previous=amp_A)
-        amp_B.solve()
         amp_C = Computer(opcodes.copy(), initial_input=input_set[2], previous=amp_B)
-        amp_C.solve()
         amp_D = Computer(opcodes.copy(), initial_input=input_set[3], previous=amp_C)
-        amp_D.solve()
         amp_E = Computer(opcodes.copy(), initial_input=input_set[4], previous=amp_D)
-        amp_E.solve()
         amp_A.previous = amp_E
 
-        # while amp_A.is_waiting_for_signal:
-        #     amp_A.resume()
-        #     amp_B.resume()
-        #     amp_C.resume()
-        #     amp_D.resume()
-        #     amp_E.resume()
+        amp_A.solve()
 
-        if amp_E.next_input > max_signal:
-            max_signal = amp_E.next_input
+        amp_B.resume()
+        amp_C.resume()
+        amp_D.resume()
+        amp_E.resume()
+
+        while amp_E.is_paused:
+            amp_A.resume()
+            amp_B.resume()
+            amp_C.resume()
+            amp_D.resume()
+            amp_E.resume()
+
+        if amp_E.output_for_next_computer > max_signal:
+            max_signal = amp_E.output_for_next_computer
+
+        Computer.instance_counter = 0
 
     return max_signal
 
 
 if __name__ == "__main__":
-    # with open("07_input") as f:
-    # opcodes = [int(code) for code in f.read().split(",")]
     print(solve_part_one())
-    # print(solve_part_two())
+    print(solve_part_two())
