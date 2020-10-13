@@ -149,7 +149,6 @@ class Computer:
     def _get_input(self) -> int:
         """An auxiliary method to provide input for the opcode 3."""
         input_value = int(input("Provide a number: "))
-        # self.inputs.append(input_value)
 
         return input_value
 
@@ -165,7 +164,7 @@ class Computer:
             self.output_for_next_computer = output
             raise PauseExecutionException
         else:  # [other days' puzzles]
-            print("[OPCODE 4]", output)
+            # print("[OPCODE 4]", output)
             self.inputs.append(output)
 
         return
@@ -269,6 +268,7 @@ class Computer:
                     continue
 
                 opcode = int(str(self.opcodes[index])[-2:])
+                # print(f"{index=}, {opcode=}, {self.relative_base=}")
 
                 if opcode == 99 or opcode == 0:  # 0 - additional "memory"
                     break
