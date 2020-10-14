@@ -30,7 +30,7 @@ class Computer:
         self.advance_pointer: int = 0
         self.relative_base: int = 0
         self.start_at: Optional[int] = 0
-        self.inputs: List[int] = inputs or [] # phase setting and following inputs (opcode 3)
+        self.inputs: List[int] = inputs or []  # inputs for opcode 3
         self.output_for_next_computer: Optional[int] = None  # [d7]
         self.previous: Optional[Computer] = previous  # [d7] prev. amplifier
 
