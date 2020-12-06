@@ -1,0 +1,24 @@
+def solve_part_one():
+    with open("06_input") as f:
+        declarations = [
+            len(set("".join(doc.split()))) for doc in f.read().split("\n\n")
+        ]
+
+    return sum(declarations)
+
+
+def solve_part_two():
+    with open("06_input") as f:
+        declarations = [doc.split() for doc in f.read().split("\n\n")]
+
+    common_answers = 0
+
+    for group in declarations:
+        if len(group) == 1:
+            common_answers += len(group[0])
+        else:
+            for answer in group[0]:
+                common_answers += (
+                    1 if all(answer in person for person in group[1:]) else 0
+                )
+    return common_answers
