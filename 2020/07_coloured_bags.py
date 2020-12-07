@@ -2,37 +2,11 @@ import re
 from collections import defaultdict
 from typing import Dict, List, Set
 
-# from anytree import Node
-
-
-# def create_tree() -> Set[Node]:
-#     roots: Set[Node] = set()
-#     tree_dict: Dict[str, List[Node]] = dict()
-#
-#     for rule in rules:
-#         parent_name = " ".join(rule.split()[:2])
-#         children_names = re.findall(r"(?<= \d )\w+ \w+(?= bags*[,.])", rule)
-#
-#         # If parent node exists in the tree, it should not be created anew.
-#         parent_nodes = tree_dict.setdefault(parent_name, [Node(parent_name)])
-#
-#         for child_name in children_names:
-#             # Nodes with the same names can appear in multiple places in the tree.
-#             tree_dict.setdefault(child_name, []).extend(
-#                 Node(child_name, parent=parent_node) for parent_node in parent_nodes
-#             )
-#             # If a node is a child of another, it should be in the `roots`.
-#             roots = roots.difference(tree_dict[child_name])
-#
-#         roots.update(node.root for node in parent_nodes)
-#
-#     return roots
-
 
 def get_containing_bags() -> defaultdict:
     containing_bags = defaultdict(set)
 
-    for rule in rules:
+    for rule in RULES:
         parent_name = " ".join(rule.split()[:2])
         children_names = re.findall(r"(?<= \d )\w+ \w+(?= bags*[,.])", rule)
 
@@ -54,14 +28,46 @@ def find_outer_bags_of(colour: str, containing_bags: defaultdict) -> Set[str]:
 
 def solve_part_one() -> int:
     containing_bags = get_containing_bags()
-    bag_colour = "shiny gold"
-    outer_bags = find_outer_bags_of(bag_colour, containing_bags)
+    outer_bags = find_outer_bags_of(BAG_COLOUR, containing_bags)
 
     return len(outer_bags)
 
 
+def get_contained_bags() -> Dict[str, List[List[str]]]:
+    contained_bags = dict()
+
+    for rule in RULES:
+        parent = " ".join(rule.split()[:2])
+        children = [
+            child.split(maxsplit=1)
+            for child in re.findall(r"\d \w+ \w+(?= bags*[,.])", rule)
+        ]
+        contained_bags[parent] = children
+
+    return contained_bags
+
+
+def count_inner_bags_of(colour: str, contained_bags: Dict[str, List[List[str]]]) -> int:
+    bags_inside = contained_bags[colour]
+
+    inner_bags_count = 0
+    for number, bag in bags_inside:
+        inner_bags_count += int(number)
+        inner_bags_count += int(number) * count_inner_bags_of(bag, contained_bags)
+
+    return inner_bags_count
+
+
+def solve_part_two() -> int:
+    contained_bags = get_contained_bags()
+    return count_inner_bags_of(BAG_COLOUR, contained_bags)
+
+
 if __name__ == "__main__":
     with open("07_input") as f:
-        rules = f.read().splitlines()
+        RULES = f.read().splitlines()
+
+    BAG_COLOUR = "shiny gold"
 
     print(solve_part_one())
+    print(solve_part_two())
