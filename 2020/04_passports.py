@@ -1,7 +1,7 @@
 import re
-from typing import List
+from typing import Callable, Dict, List
 
-PASSPORT_RULES = {
+PASSPORT_RULES: Dict[str, List[Callable[[str], bool]]] = {
     "byr": [
         lambda x: len(x) == 4,
         lambda x: 1920 <= int(x) <= 2002,
@@ -15,7 +15,7 @@ PASSPORT_RULES = {
         lambda x: 2020 <= int(x) <= 2030,
     ],
     "hgt": [
-        lambda x: re.match(r"^\d+(cm|in)$", x),
+        lambda x: bool(re.match(r"^\d+(cm|in)$", x)),
         lambda x: (x[-2:] == "cm" and 150 <= int(x[:-2]) <= 193)
                   or (x[-2:] == "in" and 59 <= int(x[:-2]) <= 76),
     ],
@@ -42,7 +42,7 @@ def keys_are_valid(doc: List[str]) -> bool:
 
 
 def values_are_valid(doc: List[str]) -> bool:
-    doc_fields = dict([field.split(":") for field in doc])
+    doc_fields: Dict[str, str] = dict([field.split(":") for field in doc])
 
     for required_field, validators in PASSPORT_RULES.items():
         value = doc_fields.get(required_field)
