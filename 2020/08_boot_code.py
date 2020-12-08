@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List, Set, Tuple
 
 
@@ -13,16 +14,14 @@ class InfiniteLoopError(Exception):
     Reaching the same instruction again indicates that the program has entered
     an infinite loop."""
 
-    def __init__(self, operation: str):
-        super().__init__()
-        self.operation = operation
+    pass
 
 
 class GameBoy:
     def __init__(self, instructions: List[Tuple[str, int]]):
         self._instructions = instructions
-        self._accumulator = 0
         self._i = 0
+        self._accumulator = 0
         self._executed_instructions: Set[int] = set()
 
     def get_accumulator_value(self) -> int:
@@ -31,11 +30,22 @@ class GameBoy:
     def get_executed_instructions(self) -> Set[int]:
         return self._executed_instructions
 
-    def execute_instruction_at(self, i: int) -> int:
-        """Executes instruction number `i`, return the number of the next instruction.
+    def boot(self) -> None:
+        """Starts running the instructions from `self.instructions`.
+
+        Raises:
+            ProgramEndException if `i` exceeds the length of the instruction list.
+            InfiniteLoopError if the same instruction is reached for a second time.
+            (Exceptions are raised in the `self._execute_instruction` method.)
+        """
+        while True:
+            self._execute_instruction()
+
+    def _execute_instruction(self) -> None:
+        """Executes instruction at `self._i`, sets `_i` to the next instruction number.
 
         Available instructions (each has one integer argument):
-         - acc: increase `self.accumulator` by argument value, go to the next
+         - acc: increase `self._accumulator` by argument value, go to the next
             instruction;
          - jmp: jump to another instruction - argument is the jump length from
             the current instruction;
@@ -43,15 +53,16 @@ class GameBoy:
 
         Raises:
             ProgramEndException if `i` exceeds the length of the instruction list.
+            InfiniteLoopError if the same instruction is reached for a second time,
+                i.e. when `i` is already present in the executed instructions set.
         """
-        if i >= len(self._instructions):
+        if self._i >= len(self._instructions):
             raise ProgramEndException("Program reached the end.")
 
-        op, arg = self._instructions[i]
+        if self._i in self._executed_instructions:
+            raise InfiniteLoopError()
 
-        if i in self._executed_instructions:
-            raise InfiniteLoopError(operation=op)
-
+        op, arg = self._instructions[self._i]
         incr = 1
 
         if op == "acc":
@@ -61,10 +72,8 @@ class GameBoy:
         elif op == "nop":
             pass
 
-        self._executed_instructions.add(i)
+        self._executed_instructions.add(self._i)
         self._i += incr
-
-        return self._i
 
 
 def solve_part_one() -> int:
@@ -74,60 +83,69 @@ def solve_part_one() -> int:
     as soon as an instruction is reached for a second time.
 
     Returns:
-        Int, the value of `accumulator` just before the program executes an
-        instruction a second time.
+        Int, the value of the game accumulator just before the program executes
+        an instruction a second time.
     """
     game = GameBoy(INSTRUCTIONS)
-    i = 0
+    try:
+        game.boot()
+    except InfiniteLoopError:
+        return game.get_accumulator_value()
 
-    while True:
-        try:
-            i = game.execute_instruction_at(i)
-        except InfiniteLoopError:
-            return game.get_accumulator_value()
+    raise RuntimeError("Expected an InfiniteLoopError, something went wrong!")
+
+
+def get_loop_indexes() -> Set[int]:
+    """Returns the indexes of instructions executed before the loop was detected."""
+    test_game = GameBoy(INSTRUCTIONS)
+    try:
+        test_game.boot()
+    except InfiniteLoopError:
+        return test_game.get_executed_instructions()
+
+    raise RuntimeError("Expected an InfiniteLoopError, something went wrong!")
+
+
+def create_updated_instructions(i_swap: int) -> List[Tuple[str, int]]:
+    """Returns a copy of `INSTRUCTIONS` with the operation swapped at `i_swap` index."""
+    new_instructions: List[Tuple[str, int]] = deepcopy(INSTRUCTIONS)
+    old_op, arg = INSTRUCTIONS[i_swap]
+    if old_op == "jmp":
+        new_instructions[i_swap] = ("nop", arg)
+    elif old_op == "nop":
+        new_instructions[i_swap] = ("jmp", arg)
+
+    return new_instructions
 
 
 def solve_part_two() -> int:
     """Executes the instructions in the `INSTRUCTIONS` list.
 
-    Available instructions (each has one integer argument):
-     - acc: increase `accumulator` by argument value, go to the next instruction;
-     - jmp: jump to another instruction - argument is the jump length from
-        the current instruction;
-     - nop: do nothing, go to the next instruction.
-
     The program enters an infinite loop at one point. If exactly one of the "jmp"
     instructions is changed to "nop", or one of the "nop" to "jmp", it breaks the
-    loop - the program then reaches the end (the last line) and halts.
+    loop - the program then reaches the end (the last line) and halts. The point is
+    to find which instruction to change, and then run the program until a halt.
 
     Returns:
-        Int, the value of `accumulator` after the program execution ends.
+        Int, the value of the game's accumulator after the program ends.
     """
-    accumulator = 0
-    i = 0
-    executed_instructions = set()
+    indexes_in_loop = get_loop_indexes()
 
-    while i < len(INSTRUCTIONS):
-        op, arg = INSTRUCTIONS[i]
+    for i_swap in indexes_in_loop:
+        old_op, _ = INSTRUCTIONS[i_swap]
+        if old_op == "acc":
+            continue
 
-        # if i == 345:
-        if i in executed_instructions:
-            if op == "jmp":
-                op = "nop"
-            elif op == "nop":
-                op = "jmp"
+        new_instructions = create_updated_instructions(i_swap)
+        game = GameBoy(new_instructions)
+        try:
+            game.boot()
+        except InfiniteLoopError:
+            continue
+        except ProgramEndException:
+            return game.get_accumulator_value()
 
-        executed_instructions.add(i)
-        incr = 1
-
-        if op == "acc":
-            accumulator += arg
-        elif op == "jmp":
-            incr = arg
-
-        i += incr
-
-    return accumulator
+    raise RuntimeError("Expected a ProgramEndException, something went wrong!")
 
 
 if __name__ == "__main__":
