@@ -10,7 +10,7 @@ class Grid:
     def __init__(self, seats: List[List[str]]):
         self.seats = seats
         self.size = (len(seats[0]), len(seats))  # x, y
-        self.previous_seats: List[List[str]] = []
+        self.previous_state: List[List[str]] = []
         self.age = 0
 
     @property
@@ -30,40 +30,35 @@ class Grid:
             (x - 1, y + 1),
         ]
         for x_n, y_n in neighbours:
-            if x_n < 0 or y_n < 0:
+            if x_n < 0 or y_n < 0:  # Cannot rely on IndexError here. Python <3
                 continue
             try:
-                occupied_adjacent_seats += 1 if self.previous_seats[y_n][x_n] == "#" else 0
+                occupied_adjacent_seats += (
+                    1 if self.previous_state[y_n][x_n] == "#" else 0
+                )
             except IndexError:
                 pass
-        # if self.age == 2:
-        #     breakpoint()
+
         return occupied_adjacent_seats
 
-    def _position_is_floor(self, x: int, y: int) -> bool:
+    def _place_is_floor(self, x: int, y: int) -> bool:
         return self.seats[y][x] == "."
 
-    # def _seat_is_empty(self, x: int, y: int) -> bool:
-    #     state = self.seats[y][x]
-    #     if state == ".":
-    #         raise ValueError(f"Position ({x}, {y}) is not a seat, it's floor!")
-    #     return state == "L"
-
     def iterate(self):
-        self.previous_seats = deepcopy(self.seats)
+        self.previous_state = deepcopy(self.seats)
 
         for y in range(self.size[1]):
             for x in range(self.size[0]):
-                if self._position_is_floor(x, y):
+                if self._place_is_floor(x, y):
                     continue
                 occupied_neighbours = self._count_occupied_adjacent_seats(x, y)
-                if self.previous_seats[y][x] == "L" and not occupied_neighbours:
+                if self.previous_state[y][x] == "L" and not occupied_neighbours:
                     self.seats[y][x] = "#"
-                elif self.previous_seats[y][x] == "#" and occupied_neighbours >= 4:
+                elif self.previous_state[y][x] == "#" and occupied_neighbours >= 4:
                     self.seats[y][x] = "L"
 
-        if self.seats == self.previous_seats:
-            raise StableStateException("No seats change state any more.")
+        if self.seats == self.previous_state:
+            raise StableStateException("No seats change their state any more.")
 
         self.age += 1
         # print(self, "\n")
@@ -81,7 +76,7 @@ def solve_part_one() -> int:
         except StableStateException:
             break
 
-    print(grid.age)
+    # print(grid.age)
     return grid.occupied_seats_count
 
 
