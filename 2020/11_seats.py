@@ -28,22 +28,19 @@ class Grid:
         return sum(row.count("#") for row in self.seats)
 
     def _index_outside_gird(self, x: int, y: int) -> bool:
-        if x < 0 or y < 0:  # -1 won't raise an IndexError in Python...
+        if x < 0 or x >= self.size[0] or y < 0 or y >= self.size[1]:
             return True
-        try:
-            _ = self.previous_state[y][x]
-        except IndexError:
-            return True
-
         return False
 
-    def _is_floor(self, x: int, y: int) -> bool:
-        return self.previous_state[y][x] == "."
-
-    def _is_occupied(self, x: int, y: int) -> bool:
-        if self._is_floor(x, y):
-            raise ValueError(f"There's floor at ({x}, {y}) - it cannot be occupied")
-        return self.previous_state[y][x] == "#"
+    # ### With these methods the code is perhaps somewhat more readable,
+    # ### but it also turns out to be considerably slower (ca. 25%).
+    # def _is_floor(self, seat: str) -> bool:
+    #     return seat == "."
+    #
+    # def _is_occupied(self, seat: str) -> bool:
+    #     if self._is_floor(seat):
+    #         raise ValueError(f"Floor cannot be occupied")
+    #     return seat == "#"
 
     def _count_occupied_adjacent_seats(self, x: int, y: int) -> int:
         occupied_adjacent_seats = 0
@@ -62,11 +59,12 @@ class Grid:
                 x_n, y_n = get_nearest_seat(dist)
                 if self._index_outside_gird(x_n, y_n):
                     break
-                if not self._is_floor(x_n, y_n):
-                    if self._is_occupied(x_n, y_n):
+                seat = self.previous_state[y_n][x_n]
+                if seat != ".":
+                    if seat == "#":
                         occupied_adjacent_seats += 1
 
-                        # Optimisation - but very slight, ca. 1 s less on my machine
+                        # Optimisation - albeit slight, ca. 1 s less on my machine
                         if occupied_adjacent_seats >= self.tolerance:
                             return occupied_adjacent_seats
                     break
@@ -74,13 +72,14 @@ class Grid:
         return occupied_adjacent_seats
 
     def _update_seat(self, x: int, y: int):
-        if self._is_floor(x, y):
+        seat = self.previous_state[y][x]
+        if seat == ".":
             return
 
         occupied_neighbours = self._count_occupied_adjacent_seats(x, y)
-        if not self._is_occupied(x, y) and not occupied_neighbours:
+        if seat == "L" and not occupied_neighbours:
             self.seats[y][x] = "#"
-        elif self._is_occupied(x, y) and occupied_neighbours >= self.tolerance:
+        elif seat == "#" and occupied_neighbours >= self.tolerance:
             self.seats[y][x] = "L"
 
     def iterate(self):
