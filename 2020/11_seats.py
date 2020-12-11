@@ -19,6 +19,16 @@ class Grid:
     def occupied_seats_count(self) -> int:
         return sum(row.count("#") for row in self.seats)
 
+    def _index_outside_gird(self, x: int, y: int) -> bool:
+        if x < 0 or y < 0:  # -1 won't raise an IndexError in Python...
+            return True
+        try:
+            _ = self.previous_state[y][x]
+        except IndexError:
+            return True
+
+        return False
+
     def _count_occupied_adjacent_seats(self, x: int, y: int) -> int:
         occupied_adjacent_seats = 0
         nearest_seat_azimuths: List[Callable[[int], Tuple[int, int]]] = [
@@ -31,43 +41,37 @@ class Grid:
             lambda d: (x, y + d),
             lambda d: (x - d, y + d),
         ]
-        for direction in nearest_seat_azimuths:
-            dist = 1  # distance from the next seat
-            x_n, y_n = direction(dist)
-            if x_n < 0 or y_n < 0:  # Cannot rely on IndexError here. Python <3
-                continue
-            try:
-                while self.previous_state[y_n][x_n] == ".":
-                    dist += 1
-                    x_n, y_n = direction(dist)
-                    if x_n < 0 or y_n < 0:  # Cannot rely on IndexError here.
-                        raise IndexError
-            except IndexError:
-                continue
-
-            if self.previous_state[y_n][x_n] == "#":
-                occupied_adjacent_seats += 1
+        for get_nearest_seat in nearest_seat_azimuths:
+            for dist in range(1, self.size[0] + self.size[1]):
+                x_n, y_n = get_nearest_seat(dist)
+                if self._index_outside_gird(x_n, y_n):
+                    break
+                if self.previous_state[y_n][x_n] != ".":
+                    if self.previous_state[y_n][x_n] == "#":
+                        occupied_adjacent_seats += 1
+                    break
 
         return occupied_adjacent_seats
 
-    def _place_is_floor(self, x: int, y: int) -> bool:
-        return self.seats[y][x] == "."
+    def _update_seat(self, x: int, y: int):
+        if self.seats[y][x] == ".":
+            return
+
+        occupied_neighbours = self._count_occupied_adjacent_seats(x, y)
+        if self.previous_state[y][x] == "L" and not occupied_neighbours:
+            self.seats[y][x] = "#"
+        elif (
+                self.previous_state[y][x] == "#"
+                and occupied_neighbours >= self.tolerance
+        ):
+            self.seats[y][x] = "L"
 
     def iterate(self):
         self.previous_state = deepcopy(self.seats)
 
         for y in range(self.size[1]):
             for x in range(self.size[0]):
-                if self._place_is_floor(x, y):
-                    continue
-                occupied_neighbours = self._count_occupied_adjacent_seats(x, y)
-                if self.previous_state[y][x] == "L" and not occupied_neighbours:
-                    self.seats[y][x] = "#"
-                elif (
-                    self.previous_state[y][x] == "#"
-                    and occupied_neighbours >= self.tolerance
-                ):
-                    self.seats[y][x] = "L"
+                self._update_seat(x, y)
 
         if self.seats == self.previous_state:
             raise StableStateException("No seats change their state any more.")
@@ -107,4 +111,5 @@ if __name__ == "__main__":
     with open("11_input") as f:
         seats = [[seat for seat in row] for row in f.read().splitlines()]
 
+    # print(solve_part_one())
     print(solve_part_two())
