@@ -1,7 +1,13 @@
 import re
+from typing import Dict, List, Tuple
 
 
-def solve_part_one():
+def get_input_one():
+    with open("16_input") as f:
+        data = f.read()
+
+    rules, _, nearby_tickets = data.split("\n\n")
+
     valid_values = []
     for rule in rules.splitlines():
         _, valid_values_str = rule.split(": ")
@@ -10,6 +16,17 @@ def solve_part_one():
         valid_values.extend([range(start_1, end_1 + 1), range(start_2, end_2 + 1)])
 
     # my_ticket_numbers = re.findall(r"\d+", my_ticket)
+
+    tickets = [
+        [int(number) for number in ticket.split(",")]
+        for ticket in nearby_tickets.splitlines()[1:]
+    ]
+
+    return valid_values, tickets
+
+
+def solve_part_one():
+    valid_values, tickets = get_input_one()
 
     error_rate = 0
     for ticket in tickets:
@@ -22,12 +39,4 @@ def solve_part_one():
 
 
 if __name__ == "__main__":
-    with open("16_input") as f:
-        rules, my_ticket, nearby_tickets = f.read().split("\n\n")
-
-    tickets = [
-        [int(number) for number in ticket.split(",")]
-        for ticket in nearby_tickets.splitlines()[1:]
-    ]
-
     print(solve_part_one())
