@@ -47,15 +47,16 @@ def solve_part_one() -> int:
     for cycle in range(1, CYCLES_COUNT + 1):
         new_space = np.full(space.shape, ".")
         active_elems = [(z, y, x) for z, y, x in np.argwhere(space == "#")]
-
+        all_neighbours = set()
         for elem in active_elems:
             neighbours, active_count = get_neighbours(space, elem)
+            all_neighbours.update(neighbours)
             if active_count in [2, 3]:
                 new_space[elem] = "#"
-            for neighbour in neighbours:
-                _, active_neighbours_count = get_neighbours(space, neighbour)
-                if space[neighbour] == "." and active_neighbours_count == 3:
-                    new_space[neighbour] = "#"
+        for neighbour in all_neighbours:
+            _, active_neighbours_count = get_neighbours(space, neighbour)
+            if space[neighbour] == "." and active_neighbours_count == 3:
+                new_space[neighbour] = "#"
 
         space = new_space
 
@@ -107,14 +108,16 @@ def solve_part_two() -> int:
     for cycle in range(1, CYCLES_COUNT + 1):
         new_space = np.full(space.shape, ".")
         active_elems = [(z, y, x, w) for z, y, x, w in np.argwhere(space == "#")]
+        all_neighbours = set()
         for elem in active_elems:
             neighbours, active_count = get_4d_neighbours(space, elem)
+            all_neighbours.update(neighbours)
             if active_count in [2, 3]:
                 new_space[elem] = "#"
-            for neighbour in neighbours:
-                _, active_neighbours_count = get_4d_neighbours(space, neighbour)
-                if space[neighbour] == "." and active_neighbours_count == 3:
-                    new_space[neighbour] = "#"
+        for neighbour in all_neighbours:
+            _, active_neighbours_count = get_4d_neighbours(space, neighbour)
+            if space[neighbour] == "." and active_neighbours_count == 3:
+                new_space[neighbour] = "#"
 
         space = new_space
 
@@ -122,5 +125,6 @@ def solve_part_two() -> int:
 
 
 if __name__ == "__main__":
-    # print(solve_part_one())
+    print(solve_part_one())
     print(solve_part_two())
+    # TODO: Any way to make the both parts' solutions (3D and 4D) less repetitive?
