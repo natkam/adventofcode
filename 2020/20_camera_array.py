@@ -42,10 +42,6 @@ class Solution:
         start_tile.coords = img_middle
         self.tile_ids[img_middle] = start_tile.id
 
-    @property
-    def filled_tiles_ids(self):
-        return self.tile_ids[self.tile_ids.nonzero()]
-
     # TODO: define __getattr__ etc.? Anyway we only want to manipulate `self.img`.
 
     def matches(self, slot: Tuple[int, int], tile: Tile) -> bool:
@@ -71,10 +67,8 @@ class Solution:
         return True
 
     def get_corner_tiles(self):
-        min_x = min(np.argwhere(self.tile_ids), key=lambda coords: coords[1])[1]
-        max_x = max(np.argwhere(self.tile_ids), key=lambda coords: coords[1])[1]
-        min_y = min(np.argwhere(self.tile_ids), key=lambda coords: coords[0])[0]
-        max_y = max(np.argwhere(self.tile_ids), key=lambda coords: coords[0])[0]
+        min_y, min_x = np.min(np.argwhere(self.tile_ids), axis=0)
+        max_y, max_x = np.max(np.argwhere(self.tile_ids), axis=0)
 
         return (
             self.tile_ids[min_y, min_x]
@@ -84,27 +78,24 @@ class Solution:
         )
 
 
-def get_input_from_file() -> Dict[int, np.ndarray]:
+def get_input_from_file() -> List[Tile]:
     with open("20_input") as f:
         tiles = [tile.split("\n") for tile in f.read().split("\n\n")]
 
-    return {
+    tiles_dict = {
         int(tile[0][5:9]): np.array([[c for c in row] for row in tile[1:]])
         for tile in tiles
     }
+    return [Tile(id_, data) for id_, data in tiles_dict.items()]
 
 
-def solve_part_one():
-    tiles_dict = get_input_from_file()
-    tiles = [Tile(id_, data) for id_, data in tiles_dict.items()]
-
+def assemble(tiles):
     img_side = int(len(tiles) ** 0.5)
     start_tile = tiles.pop()
     sol = Solution(img_side, start_tile)
-    added_tiles = [start_tile]
-
-    while added_tiles:
-        added_tile = added_tiles.pop()
+    assembled_tiles = [start_tile]
+    while assembled_tiles:
+        added_tile = assembled_tiles.pop()
 
         for slot in added_tile.get_neighbours():
             checked_tiles = []
@@ -119,18 +110,24 @@ def solve_part_one():
                         sol.img[slot] = tile.data
                         sol.tile_ids[slot] = tile.id
                         tile.coords = slot
-                        added_tiles.append(tile)
+                        assembled_tiles.append(tile)
                         break
                 else:
                     checked_tiles.append(tile)
+                    continue
 
-                if sol.tile_ids[slot] != 0:
-                    break
+                break
 
             tiles = tiles + checked_tiles
+    return sol
 
-    print(sol.tile_ids)
 
+def solve_part_one():
+    tiles = get_input_from_file()
+
+    sol = assemble(tiles)
+
+    # print(sol.tile_ids)
     return sol.get_corner_tiles()
 
 
