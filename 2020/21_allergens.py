@@ -4,8 +4,11 @@ from functools import reduce
 from typing import Dict, List, Set, Tuple
 
 
-def parse_food_list(foods: List[str]) -> List[Tuple[Set[str], List[str]]]:
-    foods_parsed: List[Tuple[Set[str], List[str]]] = []
+FoodsInputList = List[Tuple[Set[str], List[str]]]
+
+
+def parse_food_list(foods: List[str]) -> FoodsInputList:
+    foods_parsed: FoodsInputList = []
     for line in foods:
         ings_str, allerg_str = line.rstrip(")").split(" (contains ")
         ings = set(ings_str.split())
@@ -14,9 +17,7 @@ def parse_food_list(foods: List[str]) -> List[Tuple[Set[str], List[str]]]:
     return foods_parsed
 
 
-def sort_ingredients_by_allergens(
-    foods_parsed: List[Tuple[Set[str], List[str]]]
-) -> defaultdict:
+def sort_ingredients_by_allergens(foods_parsed: FoodsInputList) -> defaultdict:
     """For each allergen, collects all the ingredient sets that contain it."""
     allergens = defaultdict(list)
     for ings, allerg in foods_parsed:
@@ -25,14 +26,12 @@ def sort_ingredients_by_allergens(
     return allergens
 
 
-def simplify_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
+def simplify_ingredients(allergens: defaultdict) -> Dict[str, Set[str]]:
     """For each allergen, finds ingredients common to all its ingredient sets."""
     return {a: reduce(operator.and_, ing_sets) for a, ing_sets in allergens.items()}
 
 
-def get_allergen_ingredients(
-    foods_parsed: List[Tuple[Set[str], List[str]]]
-) -> Dict[str, List[str]]:
+def get_allergen_ingredients(foods_parsed: FoodsInputList) -> Dict[str, str]:
     """Identifies which allergen is found in which ingredient."""
     allergens = sort_ingredients_by_allergens(foods_parsed)
     simplified = simplify_ingredients(allergens)
