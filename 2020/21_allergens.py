@@ -7,16 +7,17 @@ from typing import Dict, List, Set, Tuple
 def parse_food_list(foods: List[str]) -> List[Tuple[Set[str], List[str]]]:
     foods_parsed: List[Tuple[Set[str], List[str]]] = []
     for line in foods:
-        ing_str, allerg_str = line.rstrip(")").split(" (contains ")
-        ing = set(ing_str.split())
+        ings_str, allerg_str = line.rstrip(")").split(" (contains ")
+        ings = set(ings_str.split())
         allerg = allerg_str.split(", ")
-        foods_parsed.append((ing, allerg))
+        foods_parsed.append((ings, allerg))
     return foods_parsed
 
 
 def sort_ingredients_by_allergens(
     foods_parsed: List[Tuple[Set[str], List[str]]]
 ) -> defaultdict:
+    """For each allergen, collects all the ingredient sets that contain it."""
     allergens = defaultdict(list)
     for ings, allerg in foods_parsed:
         for a in allerg:
@@ -25,49 +26,45 @@ def sort_ingredients_by_allergens(
 
 
 def simplify_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
-    """For each allergen, find ingredients common to all ingredient sets."""
+    """For each allergen, finds ingredients common to all its ingredient sets."""
     return {a: reduce(operator.and_, ing_sets) for a, ing_sets in allergens.items()}
 
 
-def get_allergen_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
+def get_allergen_ingredients(
+    foods_parsed: List[Tuple[Set[str], List[str]]]
+) -> Dict[str, List[str]]:
+    """Identifies which allergen is found in which ingredient."""
+    allergens = sort_ingredients_by_allergens(foods_parsed)
     simplified = simplify_ingredients(allergens)
-    identified = {min(ings) for a, ings in simplified.items() if len(ings) == 1}
-    identified_alls = {a: min(ings) for a, ings in simplified.items() if len(ings) == 1}
+    identified = {a: min(ings) for a, ings in simplified.items() if len(ings) == 1}
 
     while len(simplified) != len(identified):
         for a, ings in simplified.items():
-            if a in identified_alls:
+            if a in identified:
                 continue
-            ings -= identified
-            simplified[a] = ings
+            ings -= set(identified.values())
             if len(ings) == 1:
-                identified.update(ings)
-                identified_alls[a] = min(ings)
+                identified[a] = min(ings)
 
-    return identified_alls
+    return identified
 
 
 def solve_part_one(foods: List[str]) -> int:
     foods_parsed = parse_food_list(foods)
-    allergens = sort_ingredients_by_allergens(foods_parsed)
-
-    identified = get_allergen_ingredients(allergens)
-    dangerous_ingredients = set(identified.values())
+    allergens = get_allergen_ingredients(foods_parsed)
 
     safe_ings_cout = 0
     for ings, _ in foods_parsed:
-        safe_ings_cout += len(ings - dangerous_ingredients)
+        safe_ings_cout += len(ings - set(allergens.values()))
 
     return safe_ings_cout
 
 
 def solve_part_two(foods: List[str]) -> str:
     foods_parsed = parse_food_list(foods)
-    allergens = sort_ingredients_by_allergens(foods_parsed)
+    allergens = get_allergen_ingredients(foods_parsed)
 
-    identified = get_allergen_ingredients(allergens)
-
-    return ",".join(ing for a, ing in sorted(identified.items()))
+    return ",".join(ing for a, ing in sorted(allergens.items()))
 
 
 if __name__ == "__main__":
