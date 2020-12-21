@@ -31,15 +31,15 @@ class Tile:
 class Image:
     def __init__(self, img_side: int):
         img_shape = (
-            (img_side + 1) * 2 + 1,
-            (img_side + 1) * 2 + 1,
+            (img_side) * 2 - 1,
+            (img_side) * 2 - 1,
         )  # Each tile is 10x10; added extra space on the edges to avoid IndexErrors.
         self._img = np.empty((*img_shape, 10, 10), dtype=str)
         self._tile_ids = np.zeros(img_shape, dtype=int)
-        self._img_middle = (img_side + 1, img_side + 1)
+        self._img_middle = (img_side - 1, img_side - 1)
         self.assembled_tiles: List[Tile] = []
 
-    # TODO: define __getattr__ etc.? Anyway we only want to manipulate `self._img`.
+    # TODO: define __getitem__ etc.? Anyway we only want to manipulate `self._img`.
 
     def assemble(self, tiles) -> None:
         start_tile = tiles.pop()
@@ -79,23 +79,35 @@ class Image:
 
     def _matches(self, slot: Tuple[int, int], tile: Tile) -> bool:
         y, x = slot
-        right_tile = self._img[y, x + 1]
-        right_tile_id = self._tile_ids[y, x + 1]
-        bottom_tile = self._img[y + 1, x]
-        bottom_tile_id = self._tile_ids[y + 1, x]
-        left_tile = self._img[y, x - 1]
-        left_tile_id = self._tile_ids[y, x - 1]
-        up_tile = self._img[y - 1, x]
-        up_tile_id = self._tile_ids[y - 1, x]
+        neighbour_coords = {
+            "right": (y, x + 1),
+            "bottom": (y + 1, x),
+            "left": (y, x - 1),
+            "up": (y - 1, x),
+        }
+        edges = {
+            "right": (np.s_[:, -1], np.s_[:, 0]),
+            "bottom": (np.s_[-1, :], np.s_[0, :]),
+            "left": (np.s_[:, 0], np.s_[:, -1]),
+            "up": (np.s_[0, :], np.s_[-1, :]),
+        }
+        neighbour_tiles = dict()
+        ids = dict()
+        edges_match = dict()
+        for side, coords in neighbour_coords.items():
+            try:
+                neighbour_tiles[side] = self._img[coords]
+            except IndexError:
+                continue
+            else:
+                ids[side] = self._tile_ids[coords]
+                edges_match[side] = (
+                    tile.data[edges[side][0]] == neighbour_tiles[side][edges[side][1]]
+                ).all()
 
-        if right_tile_id != 0 and not (tile.data[:, -1] == right_tile[:, 0]).all():
-            return False
-        if bottom_tile_id != 0 and not (tile.data[-1, :] == bottom_tile[0, :]).all():
-            return False
-        if left_tile_id != 0 and not (tile.data[:, 0] == left_tile[:, -1]).all():
-            return False
-        if up_tile_id != 0 and not (tile.data[0, :] == up_tile[-1, :]).all():
-            return False
+        for side in neighbour_tiles.keys():
+            if ids[side] != 0 and not edges_match[side]:
+                return False
 
         return True
 
