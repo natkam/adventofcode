@@ -4,15 +4,29 @@ from functools import reduce
 from typing import Dict, List, Set, Tuple
 
 
-def simplify_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
-    simplified = dict()
-    for a, ing_sets in allergens.items():
-        common_ing = reduce(operator.and_, ing_sets)
-        if len(common_ing) == 0:
-            raise ValueError(f"Oops! No common elements found for {a}!")
-        simplified[a] = common_ing
+def parse_food_list(foods: List[str]) -> List[Tuple[Set[str], List[str]]]:
+    foods_parsed: List[Tuple[Set[str], List[str]]] = []
+    for line in foods:
+        ing_str, allerg_str = line.rstrip(")").split(" (contains ")
+        ing = set(ing_str.split())
+        allerg = allerg_str.split(", ")
+        foods_parsed.append((ing, allerg))
+    return foods_parsed
 
-    return simplified
+
+def sort_ingredients_by_allergens(
+    foods_parsed: List[Tuple[Set[str], List[str]]]
+) -> defaultdict:
+    allergens = defaultdict(list)
+    for ings, allerg in foods_parsed:
+        for a in allerg:
+            allergens[a].append(ings)
+    return allergens
+
+
+def simplify_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
+    """For each allergen, find ingredients common to all ingredient sets."""
+    return {a: reduce(operator.and_, ing_sets) for a, ing_sets in allergens.items()}
 
 
 def get_allergen_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
@@ -34,16 +48,8 @@ def get_allergen_ingredients(allergens: defaultdict) -> Dict[str, List[str]]:
 
 
 def solve_part_one(foods: List[str]) -> int:
-    allergens = defaultdict(list)
-    foods_parsed: List[Tuple[Set[str], List[str]]] = []
-
-    for line in foods:
-        ing_str, allerg_str = line.rstrip(")").split(" (contains ")
-        ing = set(ing_str.split())
-        allerg = allerg_str.split(", ")
-        foods_parsed.append((ing, allerg))
-        for a in allerg:
-            allergens[a].append(ing)
+    foods_parsed = parse_food_list(foods)
+    allergens = sort_ingredients_by_allergens(foods_parsed)
 
     identified = get_allergen_ingredients(allergens)
     dangerous_ingredients = set(identified.values())
@@ -55,8 +61,18 @@ def solve_part_one(foods: List[str]) -> int:
     return safe_ings_cout
 
 
+def solve_part_two(foods: List[str]) -> str:
+    foods_parsed = parse_food_list(foods)
+    allergens = sort_ingredients_by_allergens(foods_parsed)
+
+    identified = get_allergen_ingredients(allergens)
+
+    return ",".join(ing for a, ing in sorted(identified.items()))
+
+
 if __name__ == "__main__":
     with open("21_input") as f:
         foods = f.read().splitlines()
 
     print(solve_part_one(foods))
+    print(solve_part_two(foods))
