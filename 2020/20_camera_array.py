@@ -122,9 +122,18 @@ class Image:
             * self._tile_ids[max_y, max_x]
         )
 
+    def crop_borders(self):
+        # Crop the empty slots:
+        self._tile_ids = self._tile_ids[np.any(self._tile_ids != 0, axis=1), :]
+        self._tile_ids = self._tile_ids.T[np.any(self._tile_ids != 0, axis=0), :].T
+        # TODO: Do the same in the actual _img array
+
+        img_without_borders = self._img[:, :, 1:-1, 1:-1]
+        self.img = np.block([[col for col in row] for row in img_without_borders])
+
 
 def get_input_from_file() -> List[Tile]:
-    with open("20_input") as f:
+    with open("20_test_input") as f:
         tiles = [tile.split("\n") for tile in f.read().split("\n\n")]
 
     tiles_dict = {
@@ -134,16 +143,28 @@ def get_input_from_file() -> List[Tile]:
     return [Tile(id_, data) for id_, data in tiles_dict.items()]
 
 
-def solve_part_one():
+def solve_part_one() -> int:
     tiles = get_input_from_file()
 
     img_side = int(len(tiles) ** 0.5)
     solution = Image(img_side)
     solution.assemble(tiles)
-    # print(solution.tile_ids)
+    # print(solution._tile_ids)
 
     return solution.get_corners_product()
 
 
+def solve_part_two() -> int:
+    tiles = get_input_from_file()
+    img_side = int(len(tiles) ** 0.5)
+    solution = Image(img_side)
+    solution.assemble(tiles)
+
+    solution.crop_borders()
+    # print(solution._tile_ids)
+    breakpoint()
+
+
 if __name__ == "__main__":
-    print(solve_part_one())
+    # print(solve_part_one())
+    print(solve_part_two())
