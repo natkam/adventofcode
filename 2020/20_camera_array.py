@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-import numpy as np
+import numpy as np  # type: ignore
 
 
 class Tile:

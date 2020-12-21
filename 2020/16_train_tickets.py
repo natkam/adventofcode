@@ -2,7 +2,7 @@ import re
 from functools import reduce
 from typing import Dict, List, Tuple
 
-import pandas as pd
+import pandas as pd  # type: ignore
 
 
 def read_string_data() -> Tuple[str, str, str]:
@@ -13,7 +13,7 @@ def read_string_data() -> Tuple[str, str, str]:
     return rules, my_ticket, nearby_tickets
 
 
-def parse_ranges(valid_values: str) -> List[range]:
+def get_ranges(valid_values: str) -> List[range]:
     m = re.match(r"(\d+)-(\d+) or (\d+)-(\d+)", valid_values)
     assert m is not None  # for mypy
     start_1, end_1, start_2, end_2 = [int(val) for val in m.groups()]
@@ -27,8 +27,7 @@ def get_input_one() -> Tuple[List[range], List[List[int]]]:
     all_ranges = []
     for rule in rules.splitlines():
         _, valid_values = rule.split(": ")
-        ranges = parse_ranges(valid_values)
-        all_ranges.extend(ranges)
+        all_ranges.extend(get_ranges(valid_values))
 
     tickets = [
         [int(number) for number in ticket.split(",")]
@@ -56,7 +55,7 @@ def get_rules_input(rules: str) -> Dict[str, List[range]]:
 
     for rule in rules.splitlines():
         field, valid_values = rule.split(": ")
-        parsed_rules[field] = parse_ranges(valid_values)
+        parsed_rules[field] = get_ranges(valid_values)
 
     return parsed_rules
 
@@ -80,38 +79,37 @@ def get_input_two() -> Tuple[Dict[str, List[range]], List[int], pd.DataFrame]:
             for number in ticket
         ):
             valid_tickets.append(ticket)
-    valid_tickets_df = pd.DataFrame(valid_tickets)
 
-    return parsed_rules, my_ticket_numbers, valid_tickets_df
+    return parsed_rules, my_ticket_numbers, pd.DataFrame(valid_tickets)
 
 
 def solve_part_two() -> int:
     rules, my_ticket, tickets = get_input_two()
 
     possible_columns = dict()
-    poss_indexes = dict()
+    possible_indexes = dict()
 
     for field, values in rules.items():
         possible_columns[field] = tickets.T.loc[
             tickets.isin((*values[0], *values[1])).all()
         ]
-        poss_indexes[field] = set(possible_columns[field].index.values)
+        possible_indexes[field] = set(possible_columns[field].index.values)
 
     field_indexes = dict()
 
-    while poss_indexes:
-        single_indexes = {field: i for field, i in poss_indexes.items() if len(i) == 1}
+    while possible_indexes:
+        single_indexes = {
+            field: min(i) for field, i in possible_indexes.items() if len(i) == 1
+        }
         field_indexes.update(single_indexes)
 
         for single_field, single_index in single_indexes.items():
-            del poss_indexes[single_field]
-            for field in poss_indexes.keys():
-                poss_indexes[field] -= single_index
+            del possible_indexes[single_field]
+            for field in possible_indexes.keys():
+                possible_indexes[field] -= {single_index}
 
     departure_fields = [
-        list(val)[0]
-        for field, val in field_indexes.items()
-        if field.startswith("departure")
+        val for field, val in field_indexes.items() if field.startswith("departure")
     ]
 
     return reduce(lambda a, b: a * b, [my_ticket[i] for i in departure_fields])

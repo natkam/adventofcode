@@ -1,7 +1,7 @@
 from itertools import product
 from typing import List, Tuple, cast
 
-import numpy as np
+import numpy as np  # type: ignore
 
 Point3D = Tuple[int, int, int]
 Point4D = Tuple[int, int, int, int]
