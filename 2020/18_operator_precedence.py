@@ -39,8 +39,6 @@ def evaluate(expression: str) -> int:
     p = ast.parse(expr_sub)
 
     for node in ast.walk(p):
-        if hasattr(node, 'body'):
-            node = node.body[0].value
         if isinstance(node, ast.BinOp) and isinstance(node.op, ast.Sub):
             node.op = ast.Mult()
 
@@ -50,16 +48,14 @@ def evaluate(expression: str) -> int:
 
 
 def evaluate_2(expression: str) -> int:
-    expr_sub = expression.replace("*", "-").replace("+", "/")
-    p = ast.parse(expr_sub)
+    expr_swapped = expression.translate(str.maketrans({"*": "+", "+": "*"}))
+    p = ast.parse(expr_swapped)
 
     for node in ast.walk(p):
-        if hasattr(node, 'body'):
-            node = node.body[0].value
         if isinstance(node, ast.BinOp):
-            if isinstance(node.op, ast.Sub):
+            if isinstance(node.op, ast.Add):
                 node.op = ast.Mult()
-            elif isinstance(node.op, ast.Div):
+            elif isinstance(node.op, ast.Mult):
                 node.op = ast.Add()
 
     e = ast.Expression(p.body[0].value)
