@@ -17,6 +17,18 @@ def test_solve_part_one():
         assert result == expected, f"Expected {expected}, got {result}"
 
 
+def test_solve_part_two():
+    expressions = [
+        ("1 + 2 * 3 + 4 * 5 + 6", 231),
+        ("1 + (2 * 3) + (4 * (5 + 6))", 51),
+        ("2 * 3 + (4 * 5)", 46),
+    ]
+
+    for expression, expected in expressions:
+        result = evaluate_2(expression)
+        assert result == expected, f"Expected {expected}, got {result}"
+
+
 def evaluate(expression: str) -> int:
     # Replace '*' with '-' ('-' and '+' have equal precedence)
     # Let Python create an ast tree
@@ -37,16 +49,37 @@ def evaluate(expression: str) -> int:
     return eval(compile(e, "<string>", "eval"))
 
 
-def solve_part_one(homework: List[str]) -> int:
-    results_sum = 0
-    for expression in homework:
-        results_sum += evaluate(expression)
+def evaluate_2(expression: str) -> int:
+    expr_sub = expression.replace("*", "-").replace("+", "/")
+    p = ast.parse(expr_sub)
 
-    return results_sum
+    for node in ast.walk(p):
+        if hasattr(node, 'body'):
+            node = node.body[0].value
+        if isinstance(node, ast.BinOp):
+            if isinstance(node.op, ast.Sub):
+                node.op = ast.Mult()
+            elif isinstance(node.op, ast.Div):
+                node.op = ast.Add()
+
+    e = ast.Expression(p.body[0].value)
+
+    return eval(compile(e, "<string>", "eval"))
+
+
+def solve_part_one(homework: List[str]) -> int:
+    return sum(evaluate(expression) for expression in homework)
+
+
+def solve_part_two(homework: List[str]) -> int:
+    return sum(evaluate_2(expression) for expression in homework)
 
 
 if __name__ == "__main__":
     with open("18_input") as f:
         homework = f.read().splitlines()
 
+    test_solve_part_one()
     print(solve_part_one(homework))
+    test_solve_part_two()
+    print(solve_part_two(homework))
