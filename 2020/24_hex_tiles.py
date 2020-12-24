@@ -1,9 +1,10 @@
 import re
 from typing import Set, Tuple
 
-if __name__ == '__main__':
+
+def solve_part_one() -> int:
     with open("24_input") as f:
-        lines = f.read().splitlines()
+        instructions = f.read().splitlines()
 
     p = re.compile("^(sw|nw|se|ne|e|w)(?:.*)")
 
@@ -18,18 +19,25 @@ if __name__ == '__main__':
     ref_tile = (0, 0)
     black_tiles: Set[Tuple[int, int]] = set()
 
-    for steps in lines:
-        position = [ref_tile[0], ref_tile[1]]
-        while steps:
-            prefix = p.match(steps).group(1)
-            steps = steps[len(prefix):]  # In Python 3.9 there's `.removeprefix`...
-            position[0] += steps_coords[prefix][0]
-            position[1] += steps_coords[prefix][1]
+    for steps_seq in instructions:
+        position = ref_tile
+        while steps_seq:
+            m = p.match(steps_seq)
+            assert m is not None
+            prefix = m.group(1)
+            steps_seq = steps_seq[len(prefix) :]  # In Python 3.9 there's `.removeprefix`...
+            position = (
+                position[0] + steps_coords[prefix][0],
+                position[1] + steps_coords[prefix][1],
+            )
 
-        if tuple(position) in black_tiles:
-            # breakpoint()
-            black_tiles.remove(tuple(position))
+        if position in black_tiles:
+            black_tiles.remove(position)
         else:
-            black_tiles.add(tuple(position))
+            black_tiles.add(position)
 
-    print(len(black_tiles))
+    return len(black_tiles)
+
+
+if __name__ == "__main__":
+    print(solve_part_one())
