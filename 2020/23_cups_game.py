@@ -11,22 +11,30 @@ def test_solve_part_one():
 
 def test_solve_part_two():
     input_ = "389125467"
-    result = solve_part_two(input_)
+    result = solve_part_two(input_, moves=1000)
     assert result == 149245887792, f"Expected 149245887792, got {result}."
 
 
 def make_a_move(labels: deque) -> deque:
     current_cup = labels.popleft()
-    # print(f"cups: {labels} (current: {current_cup})")
     pick_up = [labels.popleft() for _ in range(3)]
-    # print(f"pick up: {pick_up}")
-    destination = max([n for n in labels if n < current_cup] or labels)
-    # print(f"destination: {destination}")
+    n = current_cup
+    while n > 0:
+        n -= 1
+        try:
+            destination_index = labels.index(n)
+        except ValueError:
+            continue
+        break
+    else:
+        destination_index = labels.index(max(labels))
+
     labels.appendleft(current_cup)
-    labels.rotate(-(labels.index(destination) + 1))  # Destination is at the end now.
+    labels.rotate(-(destination_index + 2))  # Destination is at the end now.
     labels.extend(pick_up)
 
-    labels.rotate(-(labels.index(current_cup) + 1))
+    # labels.rotate(-(labels.index(current_cup) + 1))
+    labels.rotate(destination_index + 4)  # Doesn't make execution any faster. How come?
 
     return labels
 
@@ -35,7 +43,6 @@ def solve_part_one(input_: str, moves: int = 100) -> str:
     labels = deque([int(i) for i in input_], maxlen=len(input_))
 
     for _ in range(1, moves + 1):
-        # print(f"\n-- move {_} --")
         labels = make_a_move(labels)
 
     labels.rotate(-labels.index(1))
@@ -57,18 +64,20 @@ def solve_part_two(input_: str, moves: int = 10_000_000) -> int:
     start = time.perf_counter()
 
     for _ in range(1, moves + 1):
-        # print(f"\n-- move {_} --")
         labels = make_a_move(labels)
 
     index_of_1 = labels.index(1)
-    result = labels[index_of_1 + 1] * labels[index_of_1 + 2]
+    next_after_1, next_after_2 = labels[index_of_1 + 1], labels[index_of_1 + 2]
+    print(next_after_1, next_after_2)
+    result = next_after_1 * next_after_2
+    # result = labels[index_of_1 + 1] * labels[index_of_1 + 2]
 
     print(time.perf_counter() - start)  # ca. 7.5 s for 100 iterations o_O
     return result
 
 
 if __name__ == "__main__":
-    # test_solve_part_one()
-    # print(solve_part_one("871369452"))
-    # test_solve_part_two()
-    print(solve_part_two("871369452", 100))
+    test_solve_part_one()
+    print(solve_part_one("871369452"))
+    test_solve_part_two()
+    # print(solve_part_two("871369452", 2000))
