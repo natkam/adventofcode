@@ -1,4 +1,5 @@
 from collections import deque
+from typing import List
 
 
 def test_solve_part_one():
@@ -15,19 +16,26 @@ def test_solve_part_two():
     assert result == 149245887792, f"Expected 149245887792, got {result}."
 
 
+def get_destination(current_cup: int, pick_up: List[int], labels_max: int) -> int:
+    pick_up_set = set(pick_up)
+    for i in range(1, 4):
+        if current_cup - i <= 0:
+            break
+        if current_cup - i not in pick_up_set:
+            return current_cup - i
+
+    max_in_labels = max({labels_max - i for i in range(4)} - pick_up_set)
+    return max_in_labels
+
+
 def make_a_move(labels: deque) -> deque:
     current_cup = labels.popleft()
     pick_up = [labels.popleft() for _ in range(3)]
-    n = current_cup
-    while n > 0:
-        n -= 1
-        try:
-            destination_index = labels.index(n)
-        except ValueError:
-            continue
-        break
-    else:
-        destination_index = labels.index(max(labels))
+
+    # `deque.index` calls (one for each move) take up >99% of execution time.
+    destination_index = labels.index(
+        get_destination(current_cup, pick_up, labels.maxlen)
+    )
 
     labels.appendleft(current_cup)
     labels.rotate(-(destination_index + 2))  # Destination is at the end now.
@@ -54,9 +62,7 @@ def solve_part_one(input_: str, moves: int = 100) -> str:
 def solve_part_two(input_: str, moves: int = 10_000_000) -> int:
     max_in_input = max(int(n) for n in input_)
     max_len = 1_000_000
-    labels = deque(
-        range(max_in_input + 1, max_len + max_in_input + 1), maxlen=1_000_000
-    )
+    labels = deque(range(max_in_input + 1, max_len + max_in_input + 1), maxlen=max_len)
     labels.extendleft(int(i) for i in input_[::-1])
 
     import time
@@ -70,14 +76,13 @@ def solve_part_two(input_: str, moves: int = 10_000_000) -> int:
     next_after_1, next_after_2 = labels[index_of_1 + 1], labels[index_of_1 + 2]
     print(next_after_1, next_after_2)
     result = next_after_1 * next_after_2
-    # result = labels[index_of_1 + 1] * labels[index_of_1 + 2]
 
-    print(time.perf_counter() - start)  # ca. 7.5 s for 100 iterations o_O
+    print(time.perf_counter() - start)  # ca. 2.2 s for 100 iterations o_O
     return result
 
 
 if __name__ == "__main__":
-    test_solve_part_one()
-    print(solve_part_one("871369452"))
+    # test_solve_part_one()
+    # print(solve_part_one("871369452"))
     test_solve_part_two()
     # print(solve_part_two("871369452", 2000))
