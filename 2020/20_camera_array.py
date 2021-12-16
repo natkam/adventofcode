@@ -3,15 +3,18 @@ from typing import List, Optional, Tuple
 import numpy as np  # type: ignore
 
 
+Slot = Tuple[int, int]
+
+
 class Tile:
     def __init__(
-        self, id_: int, data: np.ndarray, coords: Optional[Tuple[int, int]] = None
+        self, id_: int, data: np.ndarray, coords: Optional[Slot] = None
     ):
         self.id = id_
         self.data = data
         self.coords = coords
 
-    def get_neighbours(self) -> List[Tuple[int, int]]:
+    def get_neighbours(self) -> List[Slot]:
         assert self.coords is not None
         y, x = self.coords
         neighbours = [(y, x + 1), (y + 1, x)]
@@ -60,13 +63,13 @@ class Image:
 
                 tiles += checked_tiles
 
-    def _set_tile(self, slot: Tuple[int, int], tile: Tile) -> None:
+    def _set_tile(self, slot: Slot, tile: Tile) -> None:
         self._img[slot] = tile.data
         self._tile_ids[slot] = tile.id
         tile.coords = slot
         self.assembled_tiles.append(tile)
 
-    def _try_to_match_tile(self, slot: Tuple[int, int], tile: Tile) -> bool:
+    def _try_to_match_tile(self, slot: Slot, tile: Tile) -> bool:
         for i in range(8):
             if i == 4:  # Transpose the array after the 4th rotation.
                 tile.data = tile.data.T
@@ -77,7 +80,7 @@ class Image:
 
         return False
 
-    def _matches(self, slot: Tuple[int, int], tile: Tile) -> bool:
+    def _matches(self, slot: Slot, tile: Tile) -> bool:
         y, x = slot
         neighbour_coords = {
             "right": (y, x + 1),
@@ -130,6 +133,9 @@ class Image:
 
         img_without_borders = self._img[:, :, 1:-1, 1:-1]
         self.img = np.block([[col for col in row] for row in img_without_borders])
+
+    def __str__(self):
+
 
 
 def get_input_from_file() -> List[Tile]:
