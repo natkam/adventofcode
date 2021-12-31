@@ -28,9 +28,20 @@ def _grow_polymer(sequence: str) -> str:
 
 
 def solve(insertions_number: int) -> int:
-    cc = Counter()
+    main_counter = Counter()
+    pair_replacements = {}
+
     for elem, next_elem in zip(template, template[1:]):
         sequence = elem + next_elem
+
+        replacement = pair_replacements.get(sequence)
+        if replacement is not None:
+            print(f"Using memoisation for pair {sequence}")
+            # Don't count the letter common to two pairs twice:
+            c = Counter(replacement[:-1])
+            main_counter += c
+            continue
+
         # print("==============")
         # print(f"{elem}{next_elem}")
         for _ in range(insertions_number):
@@ -40,15 +51,15 @@ def solve(insertions_number: int) -> int:
 
         # Don't count the letter common to two pairs twice:
         c = Counter(sequence[:-1])
-        # print(len(sequence), c)
-        cc += c
+        pair_replacements[elem + next_elem] = sequence
+        main_counter += c
 
     # Also count the last element of the entire sequence:
-    cc[next_elem] += 1
+    main_counter[next_elem] += 1
 
     # print("--------------------------")
-    print(cc)
-    return max(cc.values()) - min(cc.values())
+    print(main_counter)
+    return max(main_counter.values()) - min(main_counter.values())
 
 
 if __name__ == "__main__":
@@ -63,3 +74,4 @@ if __name__ == "__main__":
 
     # Part 2:
     # print(solve(40))  # That's way too much at the moment :P
+    print(solve(20))  # 20: 3260359
