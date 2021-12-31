@@ -33,7 +33,7 @@ def _grow_polymer(sequence: str) -> str:
 def _get_pair_replacement_after_10_rounds(pair: str) -> str:
     replacement = pair_replacements.get(pair)
     if replacement is not None:
-        print(f"Using memoisation for pair {pair}")
+        # print(f"Using memoisation for pair {pair}")
         # Don't count the letter common to two pairs twice:
         return replacement
 
@@ -52,14 +52,17 @@ def solve(insertions_number: int) -> int:
         pair = elem + next_elem
         sequence = _get_pair_replacement_after_10_rounds(pair)
 
-        # Don't count the letter common to two pairs twice:
-        c = Counter(sequence[:-1])
-        main_counter += c
+        for elem_1, next_elem_1 in zip(sequence, sequence[1:]):
+            pair_1 = elem_1 + next_elem_1
+            sequence_1 = _get_pair_replacement_after_10_rounds(pair_1)
+            # Don't count the letter common to two pairs twice:
+            c = Counter(sequence_1[:-1])
+            main_counter += c
 
     # Also count the last element of the entire sequence:
-    main_counter[next_elem] += 1
+    main_counter[next_elem_1] += 1
 
-    print(main_counter)
+    # print(main_counter)
     return max(main_counter.values()) - min(main_counter.values())
 
 
@@ -71,8 +74,12 @@ if __name__ == "__main__":
     rules: Dict[str, str] = dict([line.split(" -> ") for line in data[2:]])
 
     # Part 1:
-    print(solve(10))  # 3009
-
+    # print(solve(10))  # 3009
+    # print(f"{pair_replacements=}")
     # Part 2:
     # print(solve(40))  # That's way too much at the moment :P
-    # print(solve(20))  # 20: 3260359
+
+    import time
+    start = time.perf_counter()
+    print(solve(20))  # 20: 3260359
+    print(time.perf_counter() - start, "sec")  # < 0.5 s!
