@@ -16,7 +16,7 @@ from collections import Counter
 from typing import Dict
 
 
-pair_replacements = {}
+PAIR_REPLACEMENTS = {}
 
 
 def _grow_polymer(sequence: str) -> str:
@@ -30,18 +30,18 @@ def _grow_polymer(sequence: str) -> str:
     return result
 
 
-def _get_pair_replacement_after_10_rounds(pair: str) -> str:
-    replacement = pair_replacements.get(pair)
+def _get_pair_replacement_after_rounds(pair: str) -> str:
+    ROUNDS = 10
+    replacement = PAIR_REPLACEMENTS.get(pair)
     if replacement is not None:
-        # print(f"Using memoisation for pair {pair}")
-        # Don't count the letter common to two pairs twice:
+        # print(f"Using memoization for pair {pair}")
         return replacement
 
     sequence = pair
-    for _ in range(10):
+    for _ in range(ROUNDS):
         sequence = _grow_polymer(sequence)
 
-    pair_replacements[pair] = sequence
+    PAIR_REPLACEMENTS[pair] = sequence
     return sequence
 
 
@@ -50,17 +50,22 @@ def solve(insertions_number: int) -> int:
 
     for elem, next_elem in zip(template, template[1:]):
         pair = elem + next_elem
-        sequence = _get_pair_replacement_after_10_rounds(pair)
+        sequence = _get_pair_replacement_after_rounds(pair)
 
         for elem_1, next_elem_1 in zip(sequence, sequence[1:]):
             pair_1 = elem_1 + next_elem_1
-            sequence_1 = _get_pair_replacement_after_10_rounds(pair_1)
-            # Don't count the letter common to two pairs twice:
-            c = Counter(sequence_1[:-1])
-            main_counter += c
+            sequence_1 = _get_pair_replacement_after_rounds(pair_1)
+
+            for elem_2, next_elem_2 in zip(sequence_1, sequence_1[1:]):
+                pair_2 = elem_2 + next_elem_2
+                sequence_2 = _get_pair_replacement_after_rounds(pair_2)
+
+                # Don't count the letter common to two pairs twice:
+                c = Counter(sequence_2[:-1])
+                main_counter += c
 
     # Also count the last element of the entire sequence:
-    main_counter[next_elem_1] += 1
+    main_counter[template[-1]] += 1
 
     # print(main_counter)
     return max(main_counter.values()) - min(main_counter.values())
@@ -81,5 +86,5 @@ if __name__ == "__main__":
 
     import time
     start = time.perf_counter()
-    print(solve(20))  # 20: 3260359
-    print(time.perf_counter() - start, "sec")  # < 0.5 s!
+    print(solve(20))  # 20: 3260359 (~0.5 s), 30: 3374833625 (730s)
+    print(time.perf_counter() - start, "sec")  # ~0.5 s!
