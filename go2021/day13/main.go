@@ -17,10 +17,12 @@ func getFoldAxis(line string) (string, string) {
 
 func solvePartOne(data string) (int64, error) {
 	dataParts := strings.Split(data, "\n\n")
-	coords := strings.Split(dataParts[0], "\n")
+	coordsAsStrings := strings.Split(dataParts[0], "\n")
 	axis, foldCoord := getFoldAxis(dataParts[1])
-	for _, line := range coords {
-		fmt.Println(line)
+	var coords []
+	for _, line := range coords_str {
+
+	fmt.Println(line)
 	}
 	fmt.Println(axis, foldCoord)
 
