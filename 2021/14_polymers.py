@@ -16,9 +16,9 @@ from collections import Counter
 from typing import Dict
 
 
-def _grow_polymer(template: str) -> str:
+def _grow_polymer(sequence: str) -> str:
     result = ""
-    for elem, next_elem in zip(template, template[1:]):
+    for elem, next_elem in zip(sequence, sequence[1:]):
         result += elem
         result += rules[elem + next_elem]
 
@@ -28,15 +28,27 @@ def _grow_polymer(template: str) -> str:
 
 
 def solve_part_one() -> int:
-    sequence = template
-    for _ in range(10):
-        sequence = _grow_polymer(sequence)
-        c = Counter(sequence)
-        # print(len(sequence), c)
-        # print(sequence)
+    cc = Counter()
+    for elem, next_elem in zip(template, template[1:]):
+        sequence = elem + next_elem
+        # print("==============")
+        # print(f"{elem}{next_elem}")
+        for _ in range(22):
+            sequence = _grow_polymer(sequence)
 
-    # print(len(sequence))
-    return max(c.values()) - min(c.values())
+        # print(f"{sequence[0]}...{sequence[-1]}")
+
+        # Don't count the letter common to two pairs twice:
+        c = Counter(sequence[:-1])
+        # print(len(sequence), c)
+        cc += c
+
+    # Also count the last element of the entire sequence:
+    cc[next_elem] += 1
+
+    # print("--------------------------")
+    print(cc)
+    return max(cc.values()) - min(cc.values())
 
 
 if __name__ == "__main__":
