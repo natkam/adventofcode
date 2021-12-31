@@ -16,6 +16,9 @@ from collections import Counter
 from typing import Dict
 
 
+pair_replacements = {}
+
+
 def _grow_polymer(sequence: str) -> str:
     result = ""
     for elem, next_elem in zip(sequence, sequence[1:]):
@@ -27,37 +30,35 @@ def _grow_polymer(sequence: str) -> str:
     return result
 
 
+def _get_pair_replacement_after_10_rounds(pair: str) -> str:
+    replacement = pair_replacements.get(pair)
+    if replacement is not None:
+        print(f"Using memoisation for pair {pair}")
+        # Don't count the letter common to two pairs twice:
+        return replacement
+
+    sequence = pair
+    for _ in range(10):
+        sequence = _grow_polymer(sequence)
+
+    pair_replacements[pair] = sequence
+    return sequence
+
+
 def solve(insertions_number: int) -> int:
     main_counter = Counter()
-    pair_replacements = {}
 
     for elem, next_elem in zip(template, template[1:]):
-        sequence = elem + next_elem
-
-        replacement = pair_replacements.get(sequence)
-        if replacement is not None:
-            print(f"Using memoisation for pair {sequence}")
-            # Don't count the letter common to two pairs twice:
-            c = Counter(replacement[:-1])
-            main_counter += c
-            continue
-
-        # print("==============")
-        # print(f"{elem}{next_elem}")
-        for _ in range(insertions_number):
-            sequence = _grow_polymer(sequence)
-
-        # print(f"{sequence[0]}...{sequence[-1]}")
+        pair = elem + next_elem
+        sequence = _get_pair_replacement_after_10_rounds(pair)
 
         # Don't count the letter common to two pairs twice:
         c = Counter(sequence[:-1])
-        pair_replacements[elem + next_elem] = sequence
         main_counter += c
 
     # Also count the last element of the entire sequence:
     main_counter[next_elem] += 1
 
-    # print("--------------------------")
     print(main_counter)
     return max(main_counter.values()) - min(main_counter.values())
 
@@ -70,8 +71,8 @@ if __name__ == "__main__":
     rules: Dict[str, str] = dict([line.split(" -> ") for line in data[2:]])
 
     # Part 1:
-    # print(solve(10))  # 3009
+    print(solve(10))  # 3009
 
     # Part 2:
     # print(solve(40))  # That's way too much at the moment :P
-    print(solve(20))  # 20: 3260359
+    # print(solve(20))  # 20: 3260359
