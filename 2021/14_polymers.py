@@ -27,13 +27,13 @@ def _grow_polymer(sequence: str) -> str:
     return result
 
 
-def solve_part_one() -> int:
+def solve(insertions_number: int) -> int:
     cc = Counter()
     for elem, next_elem in zip(template, template[1:]):
         sequence = elem + next_elem
         # print("==============")
         # print(f"{elem}{next_elem}")
-        for _ in range(22):
+        for _ in range(insertions_number):
             sequence = _grow_polymer(sequence)
 
         # print(f"{sequence[0]}...{sequence[-1]}")
@@ -58,4 +58,8 @@ if __name__ == "__main__":
     template: str = data[0]
     rules: Dict[str, str] = dict([line.split(" -> ") for line in data[2:]])
 
-    print(solve_part_one())  # 3009
+    # Part 1:
+    # print(solve(10))  # 3009
+
+    # Part 2:
+    # print(solve(40))  # That's way too much at the moment :P
