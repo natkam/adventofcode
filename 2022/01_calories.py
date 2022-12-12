@@ -25,6 +25,7 @@ def part_one():
 
     return max(calories)
 
+
 def part_two():
     with open("01_input") as f:
         data = f.read().splitlines()
@@ -32,7 +33,6 @@ def part_two():
     calories = _get_calories_per_elf(data)
 
     return sum(sorted(calories)[-3:])
-
 
 
 if __name__ == "__main__":
