@@ -71,12 +71,44 @@ def solve(insertions_number: int) -> int:
     return max(main_counter.values()) - min(main_counter.values())
 
 
+def _get_char_counts(pair: str, level: int) -> Counter:
+    try:
+        counter = PAIR_COUNTERS[(pair, level)]
+    except KeyError:
+        inserted_char = rules[pair]
+        left = pair[0] + inserted_char
+        right = inserted_char + pair[1]
+        c_left = _get_char_counts(left, level - 1)
+        c_right = _get_char_counts(right, level - 1)
+        c = c_left + c_right
+        PAIR_COUNTERS[(pair, level)] = c
+        return c
+    else:
+        return counter
+
+
+def solve_with_memo_2(rounds_number: int) -> int:
+    main_counter = Counter()
+
+    for elem, next_elem in zip(template, template[1:]):
+        pair = elem + next_elem
+        print(pair)
+        c = _get_char_counts(pair, rounds_number)
+        main_counter += c
+
+    print(main_counter)
+    return max(main_counter.values()) - min(main_counter.values())
+
+
 if __name__ == "__main__":
-    with open("14_input") as f:
+    with open("14_test_input") as f:
         data = f.read().splitlines()
 
     template: str = data[0]
     rules: Dict[str, str] = dict([line.split(" -> ") for line in data[2:]])
+    PAIR_COUNTERS = {(pair, 1): Counter(pair + val) for pair, val in rules.items()}
+
+    print(solve_with_memo_2(10))
 
     # Part 1:
     # print(solve(10))  # 3009
@@ -84,7 +116,10 @@ if __name__ == "__main__":
     # Part 2:
     # print(solve(40))  # That's way too much at the moment :P
 
-    import time
-    start = time.perf_counter()
-    print(solve(20))  # 20: 3260359 (~0.5 s), 30: 3374833625 (730s)
-    print(time.perf_counter() - start, "sec")  # ~0.5 s!
+    # import time
+    # start = time.perf_counter()
+    # print(solve(20))  # 20: 3260359 (~0.5 s), 30: 3374833625 (730s)
+    # print(time.perf_counter() - start, "sec")  # ~0.5 s!
+
+    for key, val in PAIR_COUNTERS.items():
+        print(key, dict(val))
