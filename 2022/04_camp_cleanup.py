@@ -1,7 +1,7 @@
 from typing import List
 
 
-def _parse_input(data: List[str]) -> List[List[str]]:
+def _parse_input(data: List[str]) -> List[List[List[str]]]:
     return [[rang.split("-") for rang in line.split(",")] for line in data]
 
 

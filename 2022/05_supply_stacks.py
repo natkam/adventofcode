@@ -1,9 +1,9 @@
-from typing import List, Tuple
+from typing import Any, List, Tuple
 
 
-def _parse(data: List[str]) -> Tuple[List[str], List[int]]:
-    stacks = []
-    moves = []
+def _parse(data: List[str]) -> Tuple[List[List[str]], List[List[int]]]:
+    stacks: List[List[str]] = []
+    moves: List[List[int]] = []
     parsing_stacks = True
     for line in data:
         if line == "\n":
@@ -42,20 +42,20 @@ def _parse(data: List[str]) -> Tuple[List[str], List[int]]:
     return stacks, moves
 
 
-def _move_one(stacks, how_many, fr, to):
+def _move_one(stacks: List[Any], how_many: int, fr: int, to: int):
     for crate in range(how_many):
         # Col. numbers in the instruction start with 1 => hence -1 in indexes.
         stacks[to - 1].append(stacks[fr - 1].pop())
 
 
-def _move_two(stacks, how_many, fr, to):
+def _move_two(stacks: List[Any], how_many: int, fr: int, to: int):
     # Col. numbers in the instruction start with 1 => hence -1 in indexes.
     moved_crates = stacks[fr - 1][-how_many:]
     stacks[fr - 1][-how_many:] = []
     stacks[to - 1].extend(moved_crates)
 
 
-def part_one():
+def part_one() -> str:
     with open("05_input") as f:
         data = f.readlines()
 
@@ -66,7 +66,7 @@ def part_one():
     return "".join(s.pop() for s in stacks)
 
 
-def part_two():
+def part_two() -> str:
     with open("05_input") as f:
         data = f.readlines()
 
