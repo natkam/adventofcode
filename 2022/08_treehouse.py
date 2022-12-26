@@ -34,41 +34,39 @@ def part_two():
     for y in range(len(data)):
         row = data[y]
         for x in range(len(row)):
-            west = 1
+            west = 0
             while True:
-                if (west_i := x - west) < 0:
-                    west -= 1
-                    break
-                if row[west_i] >= row[x]:
+                if x == west:
+                    # Edge of the forest
                     break
                 west += 1
-            east = 1
-            while True:
-                if (east_i := x + east) >= len(row):
-                    east -= 1
+                if row[x - west] >= row[x]:
                     break
-                if row[east_i] >= row[x]:
+            east = 0
+            while True:
+                if x + east == len(row) - 1:
+                    # Edge of the forest
                     break
                 east += 1
-            north = 1
-            while True:
-                if (north_i := y - north) < 0:
-                    north -= 1
+                if row[x + east] >= row[x]:
                     break
-                if data[north_i][x] >= row[x]:
+            north = 0
+            while True:
+                if y == north:
+                    # Edge of the forest
                     break
                 north += 1
-            south = 1
-            while True:
-                if (south_i := y + south) >= len(row):
-                    south -= 1
+                if data[y - north][x] >= row[x]:
                     break
-                if data[south_i][x] >= row[x]:
+            south = 0
+            while True:
+                if y + south == len(row) - 1:
+                    # Edge of the forest
                     break
                 south += 1
+                if data[y + south][x] >= row[x]:
+                    break
             scenic_score = max(scenic_score, west * east * north * south)
-            if scenic_score == 199272:
-                breakpoint()
 
     return scenic_score
 
