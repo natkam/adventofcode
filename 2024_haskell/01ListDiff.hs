@@ -2,9 +2,9 @@
 
 module Main where
 
-import Data.List (sort, zip)
+import Data.List (group, nub, sort, zip)
+import Data.List.Utils (countElem)
 
--- Adapted from this answer: https://stackoverflow.com/a/7867786
 main = do
   input <- readFile "01input"
   let pairs = map words $ lines input
@@ -14,6 +14,10 @@ main = do
   let diff = sum $ zipWith (curry (abs . uncurry subtract)) left right
 
   print diff
+
+  let diff' = sum [x * countElem x right | x <- left]
+
+  print diff'
 
 readInt :: String -> Int
 readInt = read
