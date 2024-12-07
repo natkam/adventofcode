@@ -7,11 +7,9 @@ import Data.List.Utils (countElem)
 
 main = do
   input <- readFile "01input"
-  let pairs = map words $ lines input
-
-  let left = sortNthCol 0 pairs
-  let right = sortNthCol 1 pairs
-  let diff = sum $ zipWith (curry (abs . uncurry subtract)) left right
+  let pairs = [map readInt level | level <- map words (lines input)]
+  let [left, right] = [map (!! n) pairs | n <- [0, 1]]
+  let diff = sum $ zipWith (curry (abs . uncurry subtract)) (sort left) (sort right)
 
   print diff
 
@@ -21,6 +19,3 @@ main = do
 
 readInt :: String -> Int
 readInt = read
-
-sortNthCol :: Int -> [[String]] -> [Int]
-sortNthCol n = sort . map (readInt . (!! n))
