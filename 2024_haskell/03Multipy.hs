@@ -8,10 +8,7 @@ main = do
 
   print $ getResult (extractPairs input)
 
-  -- The input is split on "don't()"s, producing a list. The first elem should
-  -- be kept, so I prefix it with "do()". All the subsequent elems started
-  -- with "don't()", and I only want to keep their part after a "do()".
-  print $ (getResult . extractPairs . cutOutDon'ts) ("do()" ++ input)
+  print $ (getResult . extractPairs . cut) input
 
 readInt :: String -> Int
 readInt = read
@@ -30,10 +27,5 @@ getResult pairs = sum $ map (\[x, y] -> x * y) pairs
 
 -- Only keep parts of the string after a "do()" (of which the string may
 -- contain multiple occurrences)
-getDos :: String -> String
-getDos s = case splitOn "do()" s of
-  x : xs -> concat xs
-  _ -> ""
-
-cutOutDon'ts :: String -> String
-cutOutDon'ts input = concatMap getDos (splitOn "don't()" input)
+cut :: String -> String
+cut = concatMap (head . splitOn "don't()") . splitOn "do()"
