@@ -1,17 +1,14 @@
 module Main where
 
-import Data.Ix (inRange)
-import Data.List (elemIndices)
-
+main :: IO ()
 main = do
-  input <- readFile "02testinput"
+  input <- readFile "02input"
   let reports = map (map readInt . words) (lines input)
-  let safe = countSafe (inRange (-3, -1)) reports + countSafe (inRange (1, 3)) reports
 
+  let safe = length $ filter (== True) (map isSafe reports)
   print safe
 
-  let safe' = countSafe' (inRange (-3, -1)) reports + countSafe' (inRange (1, 3)) reports
-
+  let safe' = length $ filter (== True) (map isSafe' reports)
   print safe'
 
 readInt :: String -> Int
@@ -20,34 +17,18 @@ readInt = read
 diffs :: [Int] -> [Int]
 diffs xs = zipWith (-) xs (drop 1 xs)
 
-checkReport :: (Int -> Bool) -> [Int] -> Bool
-checkReport cond = all cond . diffs
+cond1 :: Int -> Bool
+cond1 x = x >= 1 && x <= 3
 
-checkReport' :: (Int -> Bool) -> [Int] -> Bool
-checkReport' cond = almostAll cond . diffs
+cond2 :: Int -> Bool
+cond2 x = x <= -1 && x >= -3
 
-almostAll :: (Int -> Bool) -> [Int] -> Bool
-almostAll cond xs
-  | all cond xs = True
-  | falseCount == 1 = True -- nope, it has to work after removing a *level*!
-  | falseCount <= 2 && (idx !! 1 - head idx) == 1 = True
-  | otherwise = False
-  where
-    falseCount = countTrue (map (not . cond) xs)
-    idx = elemIndices False (map cond xs)
+popNth :: [Int] -> Int -> [Int]
+popNth xs n = take n xs ++ drop (n + 1) xs
 
--- condAsc :: Int -> Bool
--- condAsc x = x <= 3 && x >= 1
+isSafe :: [Int] -> Bool
+isSafe r = all cond1 (diffs r) || all cond2 (diffs r)
 
--- condDesc :: Int -> Bool
--- condDesc x = x >= -3 && x <= -1
-
--- getSafe :: (Int -> Bool) -> [[Int]] -> [Bool]
-countTrue :: [Bool] -> Int
-countTrue = length . filter (== True)
-
-countSafe :: (Int -> Bool) -> [[Int]] -> Int
-countSafe cond reports = countTrue (map (checkReport cond) reports)
-
-countSafe' :: (Int -> Bool) -> [[Int]] -> Int
-countSafe' cond reports = countTrue (map (checkReport' cond) reports)
+-- Note: popping the (-1)st item in the list produces the whole list
+isSafe' :: [Int] -> Bool
+isSafe' r = or [isSafe r' | r' <- map (popNth r) [(-1) .. length r - 1]]
