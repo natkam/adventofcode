@@ -7,23 +7,25 @@ main = do
   input <- readFile "04input"
   let rows = lines input
 
-  -- rows, reverse rows, cols, reverse cols;
-  let horis = length (concatMap fromRow rows)
-  let vert = length (concatMap fromRow (transpose rows))
+  -- rows left-right & right-left, cols up-down & down-up;
+  let lr = length (concatMap fromRow rows)
+  let rl = length (concatMap (fromRow . reverse) rows)
+  let ud = length (concatMap fromRow (transpose rows))
+  let du = length (concatMap (fromRow . reverse) (transpose rows))
   -- diagonal: right-down, left-up, right-up, left-down
   let rd = length (diag rows)
   let lu = length (diag (reverse rows))
   let ru = length (diag (map reverse rows))
   let ld = length (diag (reverse (map reverse rows)))
 
-  print $ horis + vert + rd + lu + ru + ld
+  let result1 = lr + rl + ud + du + rd + lu + ru + ld
+  print result1
 
 fromRow :: [Char] -> [Int]
 fromRow xs =
   [ i
     | i <- [0 .. length xs - 4],
       "XMAS" == map (xs !!) [i .. i + 3]
-        || "XMAS" == map (reverse xs !!) [i .. i + 3]
   ]
 
 diag :: [[Char]] -> [(Int, Int)]
@@ -36,28 +38,3 @@ diag rows =
         && 'A' == (rows !! (j + 2)) !! (i + 2)
         && 'S' == (rows !! (j + 3)) !! (i + 3)
   ]
-
-{-
-....XXMAS.
-.SAMXMS...
-...S..A...
-..A.A.MS.X
-XMASAMX.MM
-X.....XA.A
-S.S.S.S.SS
-.A.A.A.A.A
-..M.M.M.MM
-.X.X.XMASX
--}
-{- DIAGONAL (10): rd - right-down, ru - right-up, etc.
-0 rd
-1 -
-2 -
-3 ld
-4 -
-5 ru lu
-6 -
-7 -
-8 -
-9 ru ru,lu ru,lu lu
--}
